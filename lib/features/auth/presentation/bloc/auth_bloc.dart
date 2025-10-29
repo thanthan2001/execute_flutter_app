@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:my_clean_app/core/error/failures.dart';
+import '../../../../core/storage/user_pref.dart';
+import '../../data/models/user_model.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/login_usecase.dart';
 
@@ -11,7 +13,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUsecase loginUsecase;
 
   AuthBloc({required this.loginUsecase}) : super(AuthInitial()) {
+    // Xử lý sự kiện LoginEvent
     on<LoginEvent>(_onLogin);
+
+    // Xử lý sự kiện LogoutEvent
+    on<LogoutEvent>((event, emit) async {
+      await UserPref.clearUser();
+      emit(AuthInitial());
+    });
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -36,7 +45,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(message: message));
       },
       // 3.2. Nếu thành công (Right), phát ra state Authenticated
-      (user) => emit(AuthAuthenticated(user: user)),
+      (user) async {
+        // ✅ Lưu user sau khi đăng nhập thành công
+        final userModel = UserModel(
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        );
+
+        await UserPref.saveUser(userModel);
+
+        emit(AuthAuthenticated(user: user));
+      },
     );
   }
 }

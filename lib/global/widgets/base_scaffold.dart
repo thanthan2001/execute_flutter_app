@@ -1,28 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Một Widget Scaffold có thể tái sử dụng để đảm bảo giao diện nhất quán.
-///
-/// Bao gồm các thuộc tính phổ biến như AppBar, body, floatingActionButton,
-/// và cung cấp sẵn padding mặc định cho body.
+/// Scaffold cơ sở có thể tái sử dụng để đảm bảo giao diện nhất quán trong toàn app.
+/// Bao gồm các cấu hình thường dùng: AppBar, FAB, BottomNav, padding, màu nền,...
 class BaseScaffold extends StatelessWidget {
-  /// Widget chính sẽ được hiển thị trong body của Scaffold.
   final Widget body;
-
   final String? appBarTitle;
-
   final bool showAppBar;
-
   final List<Widget>? actions;
-
   final Widget? leading;
-
   final Widget? floatingActionButton;
-
   final Widget? bottomNavigationBar;
-
   final EdgeInsetsGeometry? bodyPadding;
-
   final Color? backgroundColor;
+  final PreferredSizeWidget? customAppBar;
+  final bool resizeToAvoidBottomInset;
 
   const BaseScaffold({
     super.key,
@@ -35,16 +26,21 @@ class BaseScaffold extends StatelessWidget {
     this.bottomNavigationBar,
     this.bodyPadding,
     this.backgroundColor,
+    this.customAppBar,
+    this.resizeToAvoidBottomInset = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: _buildAppBar(),
-      body: Padding(
-        padding: bodyPadding ?? const EdgeInsets.all(16.0),
-        child: body,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      appBar: customAppBar ?? _buildAppBar(),
+      body: SafeArea(
+        child: Padding(
+          padding: bodyPadding ?? const EdgeInsets.all(16.0),
+          child: body,
+        ),
       ),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
@@ -52,13 +48,8 @@ class BaseScaffold extends StatelessWidget {
   }
 
   AppBar? _buildAppBar() {
-    if (!showAppBar) {
-      return null;
-    }
-
-    if (appBarTitle == null && actions == null && leading == null) {
-      return null;
-    }
+    if (!showAppBar) return null;
+    if (appBarTitle == null && actions == null && leading == null) return null;
 
     return AppBar(
       title: appBarTitle != null ? Text(appBarTitle!) : null,

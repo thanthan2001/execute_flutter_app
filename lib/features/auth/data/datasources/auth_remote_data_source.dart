@@ -1,35 +1,47 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/user_model.dart';
+import '../../../../core/configs/app_env.dart';
 
-// Lớp trừu tượng cho Data Source, định nghĩa các phương thức lấy dữ liệu từ xa.
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final http.Client client;
+  final Dio dio;
 
-  AuthRemoteDataSourceImpl({required this.client});
+  AuthRemoteDataSourceImpl({required this.dio});
 
   @override
   Future<UserModel> login(String email, String password) async {
-    // --- Đây là phần giả lập gọi API ---
-    print('Calling mock API to login with $email');
-    await Future.delayed(const Duration(seconds: 2)); // Giả lập độ trễ mạng
+    try {
+      final response = await dio.post(
+        '/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
 
-    if (email == 'test@example.com' && password == '123456') {
-      // Giả lập API trả về thành công
-      final mockJsonResponse = {
-        'id': '1',
-        'name': 'Flutter Junior',
-        'email': 'test@example.com',
-      };
-      return UserModel.fromJson(mockJsonResponse);
-    } else {
-      // Giả lập API trả về lỗi
-      throw ServerException();
+      // Kiểm tra status code
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return UserModel.fromJson(response.data);
+      } else {
+        throw ServerException(
+          message: 'Server returned ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      // Xử lý lỗi Dio chi tiết hơn
+      if (e.type == DioExceptionType.connectionTimeout) {
+        throw ServerException(message: 'Connection timeout');
+      } else if (e.response?.statusCode == 401) {
+        throw ServerException(message: 'Invalid credentials');
+      } else {
+        throw ServerException(message: e.message);
+      }
+    } catch (e) {
+      throw ServerException(message: e.toString());
     }
   }
 }

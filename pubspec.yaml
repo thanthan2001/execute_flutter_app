@@ -18,7 +18,7 @@ dependencies:
   # Functional Programming (for Either type)
   dartz: ^0.10.1
   # Networking
-  dio: ^5.4.3
+  dio: ^5.9.0
   # JSON Serialization
   json_annotation: ^4.9.0
   # Local Storage
@@ -33,6 +33,7 @@ dependencies:
   logger: ^2.3.0
 
   cupertino_icons: ^1.0.2
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:

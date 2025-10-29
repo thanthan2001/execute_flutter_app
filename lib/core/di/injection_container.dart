@@ -1,11 +1,12 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:my_clean_app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:my_clean_app/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:my_clean_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:my_clean_app/features/auth/domain/usecases/login_usecase.dart';
 import 'package:my_clean_app/features/auth/presentation/bloc/auth_bloc.dart';
+import '../configs/app_env.dart';
 import '../network/network_info.dart';
 
 // Service Locator
@@ -30,8 +31,9 @@ Future<void> init() async {
   );
 
   // Data sources
+// Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(client: sl()),
+    () => AuthRemoteDataSourceImpl(dio: sl()),
   );
 
   // ## Core
@@ -39,6 +41,22 @@ Future<void> init() async {
 
   // ## External
   // Đăng ký các thư viện bên ngoài.
-  sl.registerLazySingleton(() => http.Client());
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio(BaseOptions(
+      baseUrl: AppEnv.apiBaseUrl,
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+      headers: {'Content-Type': 'application/json'},
+    ));
+
+    // Bạn có thể thêm interceptor nếu muốn log
+    dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestBody: true,
+      responseBody: true,
+    ));
+
+    return dio;
+  });
   sl.registerLazySingleton(() => Connectivity());
 }
