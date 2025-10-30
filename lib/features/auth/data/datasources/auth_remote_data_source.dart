@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/user_model.dart';
-import '../../../../core/configs/app_env.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
