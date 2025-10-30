@@ -95,4 +95,14 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return Left(CacheFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> clearAllTransactions() async {
+    try {
+      await localDataSource.clearAllTransactions();
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(message: e.toString()));
+    }
+  }
 }

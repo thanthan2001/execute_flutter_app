@@ -81,11 +81,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Cài đặt',
             onPressed: () {
-              // TODO: Navigate to settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cài đặt (Coming soon)')),
-              );
+              context.push('/settings');
             },
           ),
         ],

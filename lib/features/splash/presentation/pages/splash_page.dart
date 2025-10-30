@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_clean_app/global/widgets/base_scaffold.dart';
-import '../../../../core/storage/user_pref.dart';
 import '../widgets/splash_logo.dart';
 import '../widgets/splash_title.dart';
 import '../widgets/splash_loader.dart';
@@ -26,11 +25,8 @@ class _SplashPageState extends State<SplashPage> {
 
     if (!mounted) return;
 
-    if (UserPref.isLoggedIn()) {
-      context.go('/home');
-    } else {
-      context.go('/login');
-    }
+    // Chuyển đến Dashboard thay vì login
+    context.go('/dashboard');
   }
 
   @override
