@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_clean_app/global/bloc/simple_bloc_observer.dart';
 import 'package:my_clean_app/core/di/injection_container.dart' as di;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../core/configs/app_env.dart';
 import '../core/di/injection_container.dart' as PrefManager;
 
