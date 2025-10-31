@@ -7,8 +7,10 @@ import '../core/configs/app_env.dart';
 class AppBinding {
   static Future<void> init() async {
     // Thiết lập Bloc Observer
-    Bloc.observer = SimpleBlocObserver();
-
+    assert(() {
+      Bloc.observer = SimpleBlocObserver();
+      return true;
+    }());
     // Khởi tạo locale data cho date formatting
     await initializeDateFormatting('vi_VN', null);
 
@@ -21,8 +23,5 @@ class AppBinding {
 
     // Khởi tạo dependency injection (bao gồm cả Hive và SharedPreferences)
     await di.init();
-
-    // Nếu sau này có thêm Firebase, Sentry,... thêm tại đây
-    // await Firebase.initializeApp();
   }
 }

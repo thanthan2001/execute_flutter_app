@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/configs/app_colors.dart';
+
 /// Dialog để chọn màu sắc
 class ColorPickerDialog extends StatefulWidget {
   final Color? selectedColor;
@@ -18,7 +20,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
   // Palette màu đẹp và hài hòa
   static const List<Color> _colorPalette = [
-    Colors.red,
+    AppColors.red,
     Colors.pink,
     Colors.purple,
     Colors.deepPurple,
@@ -27,7 +29,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     Colors.lightBlue,
     Colors.cyan,
     Colors.teal,
-    Colors.green,
+    AppColors.green,
     Colors.lightGreen,
     Colors.lime,
     Colors.yellow,

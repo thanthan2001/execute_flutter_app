@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/configs/app_colors.dart';
+import '../../../../core/utils/currency_input_formatter.dart';
 import '../../../dashboard/domain/entities/category_entity.dart';
 import '../../../dashboard/domain/entities/transaction_entity.dart';
 import '../bloc/transaction_bloc.dart';
@@ -37,9 +39,15 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   void initState() {
     super.initState();
 
+    // Load transactions và categories nếu chưa có
+    context.read<TransactionBloc>().add(const LoadTransactions());
+
     // Nếu đang edit, load data hiện tại
     if (isEditing) {
-      _amountController.text = widget.transaction!.amount.toString();
+      // Format amount với dấu chấm phân cách
+      final formatter = NumberFormat('#,###', 'vi_VN');
+      _amountController.text =
+          formatter.format(widget.transaction!.amount.toInt());
       _descriptionController.text = widget.transaction!.description;
       _selectedDate = widget.transaction!.date;
       _selectedType = widget.transaction!.type;
@@ -72,24 +80,79 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.red,
               ),
             );
           }
         },
         builder: (context, state) {
+          // Hiển thị loading khi đang load transactions/categories
+          if (state is TransactionLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
           // Load categories từ state
           List<CategoryEntity> categories = [];
           if (state is TransactionLoaded) {
             categories = state.categories;
 
             // Set selected category nếu đang edit
-            if (isEditing && _selectedCategory == null) {
+            if (isEditing &&
+                _selectedCategory == null &&
+                categories.isNotEmpty) {
               _selectedCategory = categories.firstWhere(
                 (c) => c.id == widget.transaction!.categoryId,
                 orElse: () => categories.first,
               );
             }
+          }
+
+          // Nếu không có categories, hiển thị thông báo
+          if (categories.isEmpty && state is! TransactionLoading) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.category_outlined,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Chưa có nhóm nào',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Vui lòng tạo nhóm trước khi thêm giao dịch',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[500],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.pop();
+                        context.push('/categories/add');
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Tạo nhóm mới'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           final isLoading = state is TransactionActionInProgress;
@@ -167,7 +230,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                     title: const Row(
                       children: [
                         Icon(Icons.arrow_downward,
-                            color: Colors.green, size: 20),
+                            color: AppColors.green, size: 20),
                         SizedBox(width: 8),
                         Text('Thu'),
                       ],
@@ -188,7 +251,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                     },
                     title: const Row(
                       children: [
-                        Icon(Icons.arrow_upward, color: Colors.red, size: 20),
+                        Icon(Icons.arrow_upward,
+                            color: AppColors.red, size: 20),
                         SizedBox(width: 8),
                         Text('Chi'),
                       ],
@@ -213,6 +277,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         labelText: 'Số tiền',
         prefixIcon: const Icon(Icons.attach_money),
         suffixText: 'đ',
+        hintText: 'Ví dụ: 2.000.000',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -220,12 +285,14 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
+        CurrencyInputFormatter(), // Format số tiền với dấu chấm
       ],
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Vui lòng nhập số tiền';
         }
-        final amount = double.tryParse(value);
+        // Lấy giá trị số từ formatted text
+        final amount = CurrencyInputFormatter.getNumericValue(value);
         if (amount == null || amount <= 0) {
           return 'Số tiền phải lớn hơn 0';
         }
@@ -403,7 +470,9 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       return;
     }
 
-    final amount = double.parse(_amountController.text);
+    // Parse amount từ formatted text (2.000.000 -> 2000000)
+    final amount =
+        CurrencyInputFormatter.getNumericValue(_amountController.text) ?? 0;
     final description = _descriptionController.text;
 
     final transaction = TransactionEntity(

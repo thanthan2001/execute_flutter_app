@@ -61,17 +61,22 @@ class CategoryModel extends HiveObject {
     return CategoryEntity(
       id: id,
       name: name,
-      icon: IconData(
-        iconCodePoint,
-        fontFamily: iconFontFamily,
-        fontPackage: iconFontPackage,
-      ),
+      icon: _createIconData(),
       color: Color(colorValue),
       type: type == 'income'
           ? TransactionCategoryType.income
           : type == 'expense'
               ? TransactionCategoryType.expense
               : TransactionCategoryType.both,
+    );
+  }
+
+  /// Helper method để tạo IconData
+  IconData _createIconData() {
+    return IconData(
+      iconCodePoint,
+      fontFamily: iconFontFamily,
+      fontPackage: iconFontPackage,
     );
   }
 

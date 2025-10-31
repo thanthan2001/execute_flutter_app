@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/configs/app_colors.dart';
 import '../../domain/entities/dashboard_summary.dart';
 
 /// Widget hiển thị Bar Chart theo tháng
@@ -120,7 +121,7 @@ class MonthlyBarChart extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: data.income,
-                color: Colors.green,
+                color: AppColors.green,
                 width: 12,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(4),
@@ -129,7 +130,7 @@ class MonthlyBarChart extends StatelessWidget {
               ),
               BarChartRodData(
                 toY: data.expense,
-                color: Colors.red,
+                color: AppColors.red,
                 width: 12,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(4),

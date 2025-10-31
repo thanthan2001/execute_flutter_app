@@ -6,9 +6,18 @@ class SplashLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(top: 16.0),
-      child: CircularProgressIndicator(),
+    return Padding(
+      padding: const EdgeInsets.only(top: 30.0),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: CircularProgressIndicator(
+          strokeWidth: 3,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            Colors.white.withOpacity(0.9),
+          ),
+        ),
+      ),
     );
   }
 }

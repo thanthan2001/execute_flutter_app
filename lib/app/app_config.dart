@@ -37,7 +37,7 @@ class AppConfig extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'Expense Manager',
+        title: 'MONI - Save & Grow',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,

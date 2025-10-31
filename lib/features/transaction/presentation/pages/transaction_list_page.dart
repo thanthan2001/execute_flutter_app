@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/configs/app_colors.dart';
 import '../../../dashboard/domain/entities/category_entity.dart';
 import '../../../dashboard/domain/entities/transaction_entity.dart';
 import '../bloc/transaction_bloc.dart';
@@ -41,7 +42,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.green,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -49,7 +50,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.red,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -65,7 +66,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const Icon(Icons.error_outline,
+                      size: 64, color: AppColors.red),
                   const SizedBox(height: 16),
                   Text(state.message),
                   const SizedBox(height: 16),
@@ -170,7 +172,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             TransactionFilter.income,
             currentFilter,
             Icons.arrow_downward,
-            Colors.green,
+            AppColors.green,
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
@@ -179,7 +181,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             TransactionFilter.expense,
             currentFilter,
             Icons.arrow_upward,
-            Colors.red,
+            AppColors.red,
           ),
         ],
       ),
@@ -236,7 +238,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     CategoryEntity? category,
   ) {
     final isIncome = transaction.type == TransactionType.income;
-    final amountColor = isIncome ? Colors.green : Colors.red;
+    final amountColor = isIncome ? AppColors.green : AppColors.red;
     final amountPrefix = isIncome ? '+' : '-';
 
     final formattedAmount = NumberFormat.currency(
@@ -255,7 +257,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: AppColors.red,
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(Icons.delete, color: Colors.white),
@@ -273,7 +275,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(foregroundColor: AppColors.red),
                 child: const Text('Xóa'),
               ),
             ],

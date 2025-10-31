@@ -1,7 +1,6 @@
 // lib/features/splash/presentation/pages/splash_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_clean_app/global/widgets/base_scaffold.dart';
 import '../widgets/splash_logo.dart';
 import '../widgets/splash_title.dart';
 import '../widgets/splash_loader.dart';
@@ -31,19 +30,30 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const BaseScaffold(
-      showAppBar: false,
-      bodyPadding: EdgeInsets.zero,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SplashLogo(),
-            SizedBox(height: 20),
-            SplashTitle(),
-            SizedBox(height: 10),
-            SplashLoader(),
-          ],
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF9598B0), // Primary color
+              const Color(0xFF7B7E94), // Darker shade
+              const Color(0xFF5E6175), // Even darker
+            ],
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SplashLogo(),
+              SizedBox(height: 40),
+              SplashTitle(),
+              SizedBox(height: 20),
+              SplashLoader(),
+            ],
+          ),
         ),
       ),
     );

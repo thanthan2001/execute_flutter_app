@@ -80,27 +80,19 @@ Future<void> init() async {
   final dashboardLocalDataSource = DashboardLocalDataSourceImpl();
   await dashboardLocalDataSource.init();
 
-  // Khởi tạo mock data nếu chưa có
-  // MIGRATION: Clear old data if iconFontPackage field is missing (version update)
+  // Khởi tạo categories mặc định nếu chưa có
+  // CHÚ Ý: CHỈ khởi tạo categories, KHÔNG khởi tạo transactions
   final categories = await dashboardLocalDataSource.getAllCategories();
-  bool needsMigration = false;
+  print('📊 Current categories count: ${categories.length}');
 
-  if (categories.isNotEmpty) {
-    // Check if first category has null fontPackage (old schema)
-    final firstCategory = categories.first;
-    if (firstCategory.iconFontPackage == null) {
-      needsMigration = true;
-      print('🔄 Migrating category data to new schema with iconFontPackage...');
-      // Clear all old data
-      await dashboardLocalDataSource.clearAllCategories();
-      await dashboardLocalDataSource.clearAllTransactions();
-    }
-  }
-
-  if (categories.isEmpty || needsMigration) {
+  if (categories.isEmpty) {
+    print('🔄 Initializing default categories...');
     await DashboardMockData.initMockCategories(dashboardLocalDataSource);
-    await DashboardMockData.initMockTransactions(dashboardLocalDataSource);
-    print('✅ Mock data initialized with proper icon support');
+    final newCategories = await dashboardLocalDataSource.getAllCategories();
+    print(
+        '✅ Default categories initialized: ${newCategories.length} categories');
+  } else {
+    print('✅ Categories already exist: ${categories.length} categories');
   }
 
   sl.registerLazySingleton<DashboardLocalDataSource>(

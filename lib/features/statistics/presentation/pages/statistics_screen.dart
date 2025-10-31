@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../core/configs/app_colors.dart';
+import '../../../../core/configs/app_dimens.dart';
 import '../../domain/entities/filter_options.dart';
 import '../../domain/entities/statistics_summary.dart';
 import '../bloc/statistics_bloc.dart';
@@ -114,7 +116,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   child: _buildSummaryCard(
                     'Tổng Thu',
                     summary.totalIncome,
-                    Colors.green,
+                    AppColors.green,
                     Icons.arrow_downward,
                   ),
                 ),
@@ -123,7 +125,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   child: _buildSummaryCard(
                     'Tổng Chi',
                     summary.totalExpense,
-                    Colors.red,
+                    AppColors.red,
                     Icons.arrow_upward,
                   ),
                 ),
@@ -174,7 +176,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             _buildTotalCard(
               'Tổng Thu Nhập',
               summary.totalIncome,
-              Colors.green,
+              AppColors.green,
               Icons.trending_up,
             ),
             const SizedBox(height: 20),
@@ -182,7 +184,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             // Category breakdown
             if (summary.incomeByCategory.isNotEmpty) ...[
               // Pie chart
-              _buildCategoryPieChart(summary.incomeByCategory, Colors.green),
+              _buildCategoryPieChart(summary.incomeByCategory, AppColors.green),
               const SizedBox(height: 20),
 
               // Category list
@@ -223,7 +225,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             _buildTotalCard(
               'Tổng Chi Tiêu',
               summary.totalExpense,
-              Colors.red,
+              AppColors.red,
               Icons.trending_down,
             ),
             const SizedBox(height: 20),
@@ -231,7 +233,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             // Category breakdown
             if (summary.expenseByCategory.isNotEmpty) ...[
               // Pie chart
-              _buildCategoryPieChart(summary.expenseByCategory, Colors.red),
+              _buildCategoryPieChart(summary.expenseByCategory, AppColors.red),
               const SizedBox(height: 20),
 
               // Category list
@@ -337,14 +339,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     final isPositive = balance >= 0;
     return Card(
       elevation: 2,
-      color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
+      color: isPositive ? AppColors.green : AppColors.red,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Icon(
               isPositive ? Icons.savings : Icons.warning,
-              color: isPositive ? Colors.green : Colors.red,
+              color: isPositive ? AppColors.green : AppColors.red,
               size: 32,
             ),
             const SizedBox(width: 12),
@@ -352,11 +354,11 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Số dư',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
+                      fontSize: AppDimens.textSize20,
+                      color: AppColors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -366,10 +368,10 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       symbol: 'đ',
                       decimalDigits: 0,
                     ).format(balance.abs()),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isPositive ? Colors.green : Colors.red,
+                      color: AppColors.white,
                     ),
                   ),
                 ],
@@ -435,7 +437,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               barRods: [
                 BarChartRodData(
                   toY: summary.totalIncome,
-                  color: Colors.green,
+                  color: AppColors.green,
                   width: 60,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(8),
@@ -448,7 +450,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               barRods: [
                 BarChartRodData(
                   toY: summary.totalExpense,
-                  color: Colors.red,
+                  color: AppColors.red,
                   width: 60,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(8),
@@ -466,10 +468,10 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   switch (value.toInt()) {
                     case 0:
                       return const Text('Thu',
-                          style: TextStyle(color: Colors.green));
+                          style: TextStyle(color: AppColors.green));
                     case 1:
                       return const Text('Chi',
-                          style: TextStyle(color: Colors.red));
+                          style: TextStyle(color: AppColors.red));
                     default:
                       return const Text('');
                   }
@@ -534,11 +536,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
-            IconData(
-              cat.categoryIconCodePoint,
-              fontFamily: cat.categoryIconFontFamily,
-              fontPackage: cat.categoryIconFontPackage,
-            ),
+            _createIconData(cat),
             color: Color(cat.categoryColorValue),
           ),
         ),
@@ -603,7 +601,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+          const Icon(Icons.error_outline, size: 64, color: AppColors.red),
           const SizedBox(height: 16),
           Text(message),
           const SizedBox(height: 16),
@@ -638,6 +636,15 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           categories: const [], // TODO: Get from repository
         ),
       ),
+    );
+  }
+
+  /// Helper method để tạo IconData từ category statistics
+  IconData _createIconData(CategoryStatistics cat) {
+    return IconData(
+      cat.categoryIconCodePoint,
+      fontFamily: cat.categoryIconFontFamily,
+      fontPackage: cat.categoryIconFontPackage,
     );
   }
 }

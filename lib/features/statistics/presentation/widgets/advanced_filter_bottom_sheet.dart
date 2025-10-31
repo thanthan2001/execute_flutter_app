@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/configs/app_colors.dart';
 import '../../../dashboard/domain/entities/category_entity.dart';
 import '../../domain/entities/filter_options.dart';
 import '../bloc/statistics_bloc.dart';
@@ -559,12 +560,12 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
             ButtonSegment(
               value: TransactionType.income,
               label: Text('Thu'),
-              icon: Icon(Icons.arrow_downward, color: Colors.green),
+              icon: Icon(Icons.arrow_downward, color: AppColors.green),
             ),
             ButtonSegment(
               value: TransactionType.expense,
               label: Text('Chi'),
-              icon: Icon(Icons.arrow_upward, color: Colors.red),
+              icon: Icon(Icons.arrow_upward, color: AppColors.red),
             ),
           ],
           selected: {_selectedType},

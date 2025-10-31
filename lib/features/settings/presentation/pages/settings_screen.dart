@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/configs/app_colors.dart';
 import '../bloc/settings_bloc.dart';
 import '../bloc/settings_event.dart';
 import '../bloc/settings_state.dart';
@@ -21,17 +22,17 @@ class SettingsScreen extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Đã xóa toàn bộ giao dịch'),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.green,
                 duration: Duration(seconds: 2),
               ),
             );
-            // Reset về initial state
-            Navigator.of(context).pop();
+            // Pop về màn hình trước và báo là cần refresh
+            Navigator.of(context).pop(true);
           } else if (state is ClearTransactionsError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Lỗi: ${state.message}'),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.red,
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -87,10 +88,22 @@ class SettingsScreen extends StatelessWidget {
 
               // Tên app
               const Text(
-                'Quản lý chi tiêu',
+                'MONI',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 4),
+
+              // Slogan
+              Text(
+                'Save & Grow',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  letterSpacing: 2,
                 ),
               ),
               const SizedBox(height: 8),
@@ -106,9 +119,9 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Thông tin thêm
-              _buildInfoRow('Tác giả', 'Clean Architecture Team'),
+              _buildInfoRow('Tác giả', 'Thân Thân'),
               const SizedBox(height: 8),
-              _buildInfoRow('Liên hệ', 'support@example.com'),
+              _buildInfoRow('Liên hệ', 'tranvanbethan2001@gmail.com'),
             ],
           ),
         ),
@@ -164,12 +177,12 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: Icon(
             Icons.delete_sweep,
-            color: isLoading ? Colors.grey : Colors.red,
+            color: isLoading ? Colors.grey : AppColors.red,
           ),
           title: Text(
             'Xóa toàn bộ dữ liệu giao dịch',
             style: TextStyle(
-              color: isLoading ? Colors.grey : Colors.red,
+              color: isLoading ? Colors.grey : AppColors.red,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -218,7 +231,7 @@ class SettingsScreen extends StatelessWidget {
                   .add(const ClearAllTransactionsEvent());
             },
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+              foregroundColor: AppColors.red,
             ),
             child: const Text(
               'Xóa',

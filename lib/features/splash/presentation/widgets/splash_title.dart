@@ -6,13 +6,37 @@ class SplashTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      'Clean Architecture App',
-      style: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5,
-      ),
+    return Column(
+      children: [
+        // App name
+        Text(
+          'MONI',
+          style: TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: const Color(0xFF9598B0),
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.1),
+                offset: const Offset(0, 2),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Slogan
+        Text(
+          'Save & Grow',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 3,
+            color: Colors.white.withOpacity(0.9),
+          ),
+        ),
+      ],
     );
   }
 }

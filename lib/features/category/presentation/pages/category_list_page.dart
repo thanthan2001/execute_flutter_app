@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/configs/app_colors.dart';
 import '../../../dashboard/domain/entities/category_entity.dart';
 import '../bloc/category_bloc.dart';
 import '../bloc/category_event.dart';
@@ -37,7 +38,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.green,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -45,7 +46,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.red,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -61,7 +62,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const Icon(Icons.error_outline,
+                      size: 64, color: AppColors.red),
                   const SizedBox(height: 16),
                   Text(state.message),
                   const SizedBox(height: 16),
@@ -226,7 +228,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.red),
             child: const Text('Xóa'),
           ),
         ],
