@@ -1,9 +1,8 @@
 import 'package:hive/hive.dart';
-import '../../../category/data/models/category_model.dart';
-import '../../../transaction/data/models/transaction_model.dart';
+import '../models/transaction_model.dart';
 
-/// Local Data Source sử dụng Hive để lưu trữ dữ liệu
-abstract class DashboardLocalDataSource {
+/// Local Data Source cho Transaction sử dụng Hive
+abstract class TransactionLocalDataSource {
   /// Lấy tất cả giao dịch
   Future<List<TransactionModel>> getAllTransactions();
 
@@ -22,36 +21,18 @@ abstract class DashboardLocalDataSource {
   /// Xóa giao dịch
   Future<void> deleteTransaction(String id);
 
-  /// Lấy tất cả danh mục
-  Future<List<CategoryModel>> getAllCategories();
-
-  /// Thêm danh mục
-  Future<void> addCategory(CategoryModel category);
-
-  /// Cập nhật danh mục
-  Future<void> updateCategory(CategoryModel category);
-
-  /// Xóa danh mục
-  Future<void> deleteCategory(String id);
-
   /// Xóa tất cả giao dịch (migration/testing)
   Future<void> clearAllTransactions();
-
-  /// Xóa tất cả danh mục (migration/testing)
-  Future<void> clearAllCategories();
 }
 
-class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
+class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
   static const String transactionBoxName = 'transactions';
-  static const String categoryBoxName = 'categories';
 
   Box<TransactionModel>? _transactionBox;
-  Box<CategoryModel>? _categoryBox;
 
-  /// Khởi tạo và mở các box
+  /// Khởi tạo và mở box
   Future<void> init() async {
     _transactionBox = await Hive.openBox<TransactionModel>(transactionBoxName);
-    _categoryBox = await Hive.openBox<CategoryModel>(categoryBoxName);
   }
 
   Box<TransactionModel> get _transactions {
@@ -59,13 +40,6 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
       throw Exception('Transaction box is not initialized');
     }
     return _transactionBox!;
-  }
-
-  Box<CategoryModel> get _categories {
-    if (_categoryBox == null || !_categoryBox!.isOpen) {
-      throw Exception('Category box is not initialized');
-    }
-    return _categoryBox!;
   }
 
   @override
@@ -80,9 +54,9 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
   ) async {
     final allTransactions = _transactions.values.toList();
     return allTransactions.where((transaction) {
-      return transaction.date
-              .isAfter(startDate.subtract(const Duration(days: 1))) &&
-          transaction.date.isBefore(endDate.add(const Duration(days: 1)));
+      // So sánh chính xác: >= startDate AND <= endDate
+      return !transaction.date.isBefore(startDate) &&
+          !transaction.date.isAfter(endDate);
     }).toList();
   }
 
@@ -102,32 +76,7 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
   }
 
   @override
-  Future<List<CategoryModel>> getAllCategories() async {
-    return _categories.values.toList();
-  }
-
-  @override
-  Future<void> addCategory(CategoryModel category) async {
-    await _categories.put(category.id, category);
-  }
-
-  @override
-  Future<void> updateCategory(CategoryModel category) async {
-    await _categories.put(category.id, category);
-  }
-
-  @override
-  Future<void> deleteCategory(String id) async {
-    await _categories.delete(id);
-  }
-
-  @override
   Future<void> clearAllTransactions() async {
     await _transactions.clear();
-  }
-
-  @override
-  Future<void> clearAllCategories() async {
-    await _categories.clear();
   }
 }

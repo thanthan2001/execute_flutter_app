@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../core/configs/app_colors.dart';
-import 'dashboard_local_data_source.dart';
-import '../../../category/data/models/category_model.dart';
+import 'category_local_data_source.dart';
+import '../models/category_model.dart';
 
 /// Helper class để khởi tạo categories mặc định
-/// CHÚ Ý: CHỈ khởi tạo categories, KHÔNG khởi tạo transactions
-class DashboardMockData {
+class CategoryMockData {
   /// Khởi tạo dữ liệu mẫu cho categories
-  static Future<void> initMockCategories(
-    DashboardLocalDataSource dataSource,
+  static Future<void> initDefaultCategories(
+    CategoryLocalDataSource dataSource,
   ) async {
     final categories = [
       // Categories cho chi tiêu

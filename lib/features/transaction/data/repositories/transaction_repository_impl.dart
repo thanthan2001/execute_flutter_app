@@ -1,16 +1,21 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
-import '../../../dashboard/data/models/transaction_model.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
-import '../../../dashboard/domain/entities/transaction_entity.dart';
+import '../datasources/transaction_local_data_source.dart';
+import '../models/transaction_model.dart';
+import '../../../category/domain/entities/category_entity.dart';
+import '../../../category/domain/repositories/category_management_repository.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/transaction_repository.dart';
 
 /// Implementation của TransactionRepository
 class TransactionRepositoryImpl implements TransactionRepository {
-  final DashboardLocalDataSource localDataSource;
+  final TransactionLocalDataSource localDataSource;
+  final CategoryManagementRepository categoryRepository;
 
-  TransactionRepositoryImpl({required this.localDataSource});
+  TransactionRepositoryImpl({
+    required this.localDataSource,
+    required this.categoryRepository,
+  });
 
   @override
   Future<Either<Failure, List<TransactionEntity>>> getAllTransactions() async {
@@ -93,13 +98,17 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<Either<Failure, List<CategoryEntity>>> getAllCategories() async {
+  Future<Either<Failure, void>> clearAllTransactions() async {
     try {
-      final models = await localDataSource.getAllCategories();
-      final entities = models.map((model) => model.toEntity()).toList();
-      return Right(entities);
+      await localDataSource.clearAllTransactions();
+      return const Right(null);
     } catch (e) {
       return Left(CacheFailure(message: e.toString()));
     }
+  }
+
+  @override
+  Future<Either<Failure, List<CategoryEntity>>> getAllCategories() async {
+    return await categoryRepository.getAllCategories();
   }
 }

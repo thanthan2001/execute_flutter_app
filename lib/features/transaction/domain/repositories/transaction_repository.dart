@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../../../dashboard/domain/entities/transaction_entity.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../entities/transaction_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
 
 /// Repository interface cho Transaction CRUD operations
 abstract class TransactionRepository {
@@ -25,6 +25,9 @@ abstract class TransactionRepository {
 
   /// Xóa giao dịch
   Future<Either<Failure, void>> deleteTransaction(String id);
+
+  /// Xóa toàn bộ giao dịch (migration/testing)
+  Future<Either<Failure, void>> clearAllTransactions();
 
   /// Lấy tất cả categories để chọn
   Future<Either<Failure, List<CategoryEntity>>> getAllCategories();

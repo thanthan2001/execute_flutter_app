@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
-import '../../../dashboard/domain/entities/transaction_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 
 /// Abstract state cho Transaction
 abstract class TransactionState extends Equatable {

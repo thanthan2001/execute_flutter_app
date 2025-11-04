@@ -1,11 +1,11 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../../dashboard/domain/repositories/dashboard_repository.dart';
+import '../../../transaction/domain/repositories/transaction_repository.dart';
 
 /// UseCase để xóa toàn bộ dữ liệu giao dịch
 class ClearAllTransactionsUseCase implements UseCase<void, NoParams> {
-  final DashboardRepository repository;
+  final TransactionRepository repository;
 
   ClearAllTransactionsUseCase(this.repository);
 

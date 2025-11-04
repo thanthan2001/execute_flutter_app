@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/configs/app_colors.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
 import 'category_pie_chart.dart';
 
 /// Widget hiển thị biểu đồ chi tiêu và thu nhập với khả năng vuốt ngang

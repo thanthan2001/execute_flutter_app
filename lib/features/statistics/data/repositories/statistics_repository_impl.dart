@@ -1,17 +1,22 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
-import '../../../dashboard/domain/entities/transaction_entity.dart' as tx;
+import '../../../transaction/data/datasources/transaction_local_data_source.dart';
+import '../../../category/data/datasources/category_local_data_source.dart';
+import '../../../transaction/domain/entities/transaction_entity.dart' as tx;
 import '../../domain/entities/filter_options.dart';
 import '../../domain/entities/statistics_summary.dart';
 import '../../domain/repositories/statistics_repository.dart';
 
 /// Implementation của StatisticsRepository
-/// Sử dụng DashboardLocalDataSource để lấy transactions và categories
+/// Sử dụng TransactionLocalDataSource và CategoryLocalDataSource
 class StatisticsRepositoryImpl implements StatisticsRepository {
-  final DashboardLocalDataSource localDataSource;
+  final TransactionLocalDataSource transactionDataSource;
+  final CategoryLocalDataSource categoryDataSource;
 
-  StatisticsRepositoryImpl({required this.localDataSource});
+  StatisticsRepositoryImpl({
+    required this.transactionDataSource,
+    required this.categoryDataSource,
+  });
 
   @override
   Future<Either<Failure, StatisticsSummary>> getStatistics({
@@ -24,13 +29,13 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       final endDate = dateRange.end;
 
       // 2. Lấy tất cả transactions trong khoảng thời gian
-      final transactionModels =
-          await localDataSource.getTransactionsByDateRange(startDate, endDate);
+      final transactionModels = await transactionDataSource
+          .getTransactionsByDateRange(startDate, endDate);
       final transactions =
           transactionModels.map((model) => model.toEntity()).toList();
 
       // 3. Lấy tất cả categories để map thông tin
-      final categoryModels = await localDataSource.getAllCategories();
+      final categoryModels = await categoryDataSource.getAllCategories();
       final categories =
           categoryModels.map((model) => model.toEntity()).toList();
       final categoryMap = {for (var cat in categories) cat.id: cat};

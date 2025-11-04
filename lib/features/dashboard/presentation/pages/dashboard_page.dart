@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/configs/app_colors.dart';
-import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
+import '../../../category/domain/repositories/category_management_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
@@ -35,13 +35,18 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadCategories() async {
     try {
-      final dataSource = di.sl<DashboardLocalDataSource>();
-      final categories = await dataSource.getAllCategories();
-      if (mounted) {
-        setState(() {
-          _categories = categories.map((model) => model.toEntity()).toList();
-        });
-      }
+      final categoryRepo = di.sl<CategoryManagementRepository>();
+      final result = await categoryRepo.getAllCategories();
+      result.fold(
+        (failure) => print('Error loading categories: $failure'),
+        (categories) {
+          if (mounted) {
+            setState(() {
+              _categories = categories;
+            });
+          }
+        },
+      );
     } catch (e) {
       print('Error loading categories: $e');
     }
@@ -60,18 +65,23 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         elevation: 0,
         actions: [
+          //Add transaction
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Thêm giao dịch',
+            onPressed: () async {
+              await context.push('/transactions/add');
+              if (mounted) {
+                context.read<DashboardBloc>().add(const RefreshDashboard());
+              }
+            },
+          ),
           // Menu với các tùy chọn
           PopupMenuButton<String>(
             icon: const Icon(Icons.menu),
             tooltip: 'Menu',
             onSelected: (value) async {
               switch (value) {
-                case 'add_transaction':
-                  await context.push('/transactions/add');
-                  if (mounted) {
-                    context.read<DashboardBloc>().add(const RefreshDashboard());
-                  }
-                  break;
                 case 'statistics':
                   await context.push('/statistics');
                   break;
@@ -96,17 +106,6 @@ class _DashboardPageState extends State<DashboardPage> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'add_transaction',
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline, size: 20),
-                    SizedBox(width: 12),
-                    Text('Thêm giao dịch'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
               const PopupMenuItem(
                 value: 'statistics',
                 child: Row(

@@ -7,10 +7,11 @@ import 'package:my_clean_app/features/auth/data/repositories/auth_repository_imp
 import 'package:my_clean_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:my_clean_app/features/auth/domain/usecases/login_usecase.dart';
 import 'package:my_clean_app/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:my_clean_app/features/dashboard/data/datasources/dashboard_local_data_source.dart';
-import 'package:my_clean_app/features/dashboard/data/datasources/dashboard_mock_data.dart';
-import 'package:my_clean_app/features/dashboard/data/models/category_model.dart';
-import 'package:my_clean_app/features/dashboard/data/models/transaction_model.dart';
+import 'package:my_clean_app/features/category/data/datasources/category_mock_data.dart';
+import 'package:my_clean_app/features/category/data/models/category_model.dart';
+import 'package:my_clean_app/features/transaction/data/models/transaction_model.dart';
+import 'package:my_clean_app/features/category/data/datasources/category_local_data_source.dart';
+import 'package:my_clean_app/features/transaction/data/datasources/transaction_local_data_source.dart';
 import 'package:my_clean_app/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:my_clean_app/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:my_clean_app/features/dashboard/domain/usecases/get_dashboard_summary_usecase.dart';
@@ -60,6 +61,37 @@ Future<void> init() async {
     Hive.registerAdapter(CategoryModelAdapter());
   }
 
+  // ## Data Sources - Initialize first
+  // Category Data Source
+  final categoryLocalDataSource = CategoryLocalDataSourceImpl();
+  await categoryLocalDataSource.init();
+
+  // Transaction Data Source
+  final transactionLocalDataSource = TransactionLocalDataSourceImpl();
+  await transactionLocalDataSource.init();
+
+  // Khởi tạo categories mặc định nếu chưa có
+  final categories = await categoryLocalDataSource.getAllCategories();
+  print('📊 Current categories count: ${categories.length}');
+
+  if (categories.isEmpty) {
+    print('🔄 Initializing default categories...');
+    await CategoryMockData.initDefaultCategories(categoryLocalDataSource);
+    final newCategories = await categoryLocalDataSource.getAllCategories();
+    print(
+        '✅ Default categories initialized: ${newCategories.length} categories');
+  } else {
+    print('✅ Categories already exist: ${categories.length} categories');
+  }
+
+  sl.registerLazySingleton<CategoryLocalDataSource>(
+    () => categoryLocalDataSource,
+  );
+
+  sl.registerLazySingleton<TransactionLocalDataSource>(
+    () => transactionLocalDataSource,
+  );
+
   // ## Features - Dashboard
   // Bloc
   sl.registerFactory(() => DashboardBloc(
@@ -72,31 +104,30 @@ Future<void> init() async {
   // Repository
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(
-      localDataSource: sl(),
+      transactionRepository: sl(),
     ),
   );
 
-  // Data sources
-  final dashboardLocalDataSource = DashboardLocalDataSourceImpl();
-  await dashboardLocalDataSource.init();
+  // ## Features - Category Management
+  // Bloc
+  sl.registerFactory(() => CategoryBloc(
+        getAllCategoriesUseCase: sl(),
+        addCategoryUseCase: sl(),
+        updateCategoryUseCase: sl(),
+        deleteCategoryUseCase: sl(),
+      ));
 
-  // Khởi tạo categories mặc định nếu chưa có
-  // CHÚ Ý: CHỈ khởi tạo categories, KHÔNG khởi tạo transactions
-  final categories = await dashboardLocalDataSource.getAllCategories();
-  print('📊 Current categories count: ${categories.length}');
+  // Use cases
+  sl.registerLazySingleton(() => category_mgmt.GetAllCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
 
-  if (categories.isEmpty) {
-    print('🔄 Initializing default categories...');
-    await DashboardMockData.initMockCategories(dashboardLocalDataSource);
-    final newCategories = await dashboardLocalDataSource.getAllCategories();
-    print(
-        '✅ Default categories initialized: ${newCategories.length} categories');
-  } else {
-    print('✅ Categories already exist: ${categories.length} categories');
-  }
-
-  sl.registerLazySingleton<DashboardLocalDataSource>(
-    () => dashboardLocalDataSource,
+  // Repository
+  sl.registerLazySingleton<CategoryManagementRepository>(
+    () => CategoryManagementRepositoryImpl(
+      localDataSource: sl(),
+    ),
   );
 
   // ## Features - Transaction
@@ -116,32 +147,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateTransactionUseCase(sl()));
   sl.registerLazySingleton(() => DeleteTransactionUseCase(sl()));
 
-  // Repository - Tái sử dụng DashboardLocalDataSource
+  // Repository
   sl.registerLazySingleton<TransactionRepository>(
     () => TransactionRepositoryImpl(
       localDataSource: sl(),
-    ),
-  );
-
-  // ## Features - Category Management
-  // Bloc
-  sl.registerFactory(() => CategoryBloc(
-        getAllCategoriesUseCase: sl(),
-        addCategoryUseCase: sl(),
-        updateCategoryUseCase: sl(),
-        deleteCategoryUseCase: sl(),
-      ));
-
-  // Use cases
-  sl.registerLazySingleton(() => category_mgmt.GetAllCategoriesUseCase(sl()));
-  sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
-  sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
-
-  // Repository - Tái sử dụng DashboardLocalDataSource
-  sl.registerLazySingleton<CategoryManagementRepository>(
-    () => CategoryManagementRepositoryImpl(
-      localDataSource: sl(),
+      categoryRepository: sl(),
     ),
   );
 
@@ -154,10 +164,11 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetStatisticsSummaryUseCase(sl()));
 
-  // Repository - Tái sử dụng DashboardLocalDataSource
+  // Repository
   sl.registerLazySingleton<StatisticsRepository>(
     () => StatisticsRepositoryImpl(
-      localDataSource: sl(),
+      transactionDataSource: sl(),
+      categoryDataSource: sl(),
     ),
   );
 

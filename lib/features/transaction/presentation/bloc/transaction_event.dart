@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../dashboard/domain/entities/transaction_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 import 'transaction_state.dart';
 
 /// Abstract event cho Transaction

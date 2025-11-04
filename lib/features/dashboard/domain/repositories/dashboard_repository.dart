@@ -9,7 +9,4 @@ abstract class DashboardRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
-
-  /// Xóa toàn bộ dữ liệu giao dịch
-  Future<Either<Failure, void>> clearAllTransactions();
 }

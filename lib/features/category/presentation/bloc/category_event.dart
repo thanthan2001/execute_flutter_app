@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../../domain/entities/category_entity.dart';
 
 /// Abstract event cho Category Management
 abstract class CategoryEvent extends Equatable {

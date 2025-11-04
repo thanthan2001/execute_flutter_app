@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../entities/category_entity.dart';
 
 /// Repository interface cho Category Management
 abstract class CategoryManagementRepository {
