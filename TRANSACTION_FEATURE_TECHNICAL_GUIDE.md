@@ -1,1569 +1,791 @@
-# 💰 Transaction Feature - Hướng Dẫn Kỹ Thuật Chi Tiết
+# 💰 Transaction Feature - Luồng Xử Lý Dữ Liệu
 
-## 📑 Mục Lục
+## 📋 Tổng Quan
 
-1. [Tổng Quan](#1-tổng-quan)
-2. [Cấu Trúc Thư Mục](#2-cấu-trúc-thư-mục)
-3. [Luồng Xử Lý CRUD](#3-luồng-xử-lý-crud)
-4. [Presentation Layer](#4-presentation-layer)
-5. [Domain Layer](#5-domain-layer)
-6. [Data Layer](#6-data-layer)
-7. [Ví Dụ Chi Tiết: Thêm Giao Dịch](#7-ví-dụ-chi-tiết-thêm-giao-dịch)
-8. [Sơ Đồ Quan Hệ](#8-sơ-đồ-quan-hệ)
+Transaction feature quản lý toàn bộ giao dịch thu chi với đầy đủ chức năng CRUD theo kiến trúc Clean Architecture.
+
+### 🎯 Chức Năng Chính
+
+- **Quản lý giao dịch:** Thêm, sửa, xóa, xem danh sách giao dịch
+- **Phân loại:** Giao dịch thu nhập (income) hoặc chi tiêu (expense)
+- **Liên kết category:** Mỗi giao dịch thuộc về 1 category
+- **Ghi chú:** Thêm mô tả cho từng giao dịch
+- **Lọc và sắp xếp:** Theo ngày, loại, category
 
 ---
 
-## 1. Tổng Quan
+## 🏗️ Kiến Trúc Clean Architecture
 
-### 🎯 Mục Tiêu
+### Cấu Trúc 3 Tầng
 
-Transaction feature cung cấp đầy đủ các chức năng **CRUD** (Create, Read, Update, Delete) để quản lý giao dịch thu chi cá nhân.
+```
+┌─────────────────────────────────────┐
+│     Presentation Layer (UI)         │
+│  - TransactionListPage              │
+│  - AddEditTransactionPage           │
+│  - TransactionBloc                  │
+└─────────────┬───────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────┐
+│        Domain Layer (Logic)         │
+│  - TransactionEntity                │
+│  - UseCases (business rules)        │
+│  - TransactionRepository Interface  │
+└─────────────┬───────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────┐
+│      Data Layer (Storage)           │
+│  - TransactionModel (Hive typeId:0) │
+│  - TransactionLocalDataSource       │
+│  - Repository Implementation        │
+└─────────────┬───────────────────────┘
+              │
+              ▼
+        [Hive Database]
+```
 
-### ✨ Chức Năng Chính
+### Vai Trò Từng Tầng
 
-#### 1. **Create - Thêm Giao Dịch Mới**
+**1. Presentation Layer:**
 
-- Form nhập thông tin: số tiền, mô tả, ngày, loại (thu/chi), nhóm
-- Validation dữ liệu đầu vào
-- Format số tiền theo chuẩn Việt Nam (2.000.000đ)
-- Chọn category từ danh sách có sẵn
-- Chọn ngày với DatePicker
+- Hiển thị danh sách giao dịch theo thời gian
+- Form thêm/sửa giao dịch với validation
+- Quản lý state với BLoC pattern
+- Hiển thị loading, error, success states
 
-#### 2. **Read - Xem Danh Sách Giao Dịch**
+**2. Domain Layer:**
 
-- Hiển thị tất cả giao dịch theo thứ tự ngày mới nhất
-- Sắp xếp theo ngày giảm dần
-- Hiển thị đầy đủ thông tin: icon, tên nhóm, số tiền, ngày, mô tả
-- Filter theo loại: Tất cả / Thu nhập / Chi tiêu
-- Group by ngày để dễ xem
+- Định nghĩa TransactionEntity với các thuộc tính cốt lõi
+- Chứa business rules trong UseCases
+- Repository interface để Data Layer implement
+- Không phụ thuộc vào framework hay database
 
-#### 3. **Update - Cập Nhật Giao Dịch**
+**3. Data Layer:**
 
-- Edit form với dữ liệu pre-fill
-- Validate và cập nhật
-- Refresh danh sách sau khi cập nhật
+- TransactionModel với Hive annotations (@HiveType typeId: 0)
+- TransactionLocalDataSource tương tác trực tiếp với Hive
+- Repository convert Model ↔ Entity
+- Bọc kết quả trong Either<Failure, Data>
 
-#### 4. **Delete - Xóa Giao Dịch**
+---
+
+## 🔄 Luồng Xử Lý Dữ Liệu
+
+### 1. Load Danh Sách Transactions
+
+```
+User mở Transaction List Page
+         ↓
+UI dispatch LoadAllTransactionsEvent
+         ↓
+TransactionBloc nhận event
+         ↓
+BLoC emit TransactionLoadingState (hiển thị loading indicator)
+         ↓
+BLoC gọi GetAllTransactionsUseCase.call()
+         ↓
+UseCase gọi TransactionRepository.getAllTransactions()
+         ↓
+Repository gọi TransactionLocalDataSource.getAllTransactions()
+         ↓
+DataSource mở Hive box 'transactions'
+         ↓
+DataSource lấy tất cả TransactionModel từ box.values
+         ↓
+DataSource trả về List<TransactionModel>
+         ↓
+Repository chuyển đổi từng Model → Entity
+         ↓
+Repository sắp xếp theo ngày mới nhất (sort by date DESC)
+         ↓
+Repository trả Either<Failure, List<TransactionEntity>>
+         ↓
+UseCase trả kết quả về BLoC
+         ↓
+BLoC emit TransactionsLoadedState với danh sách
+         ↓
+UI rebuild:
+  - Ẩn loading
+  - Hiển thị danh sách transactions
+  - Group by date (hôm nay, hôm qua, tuần này, v.v.)
+  - Hiển thị tổng thu/chi cho mỗi ngày
+```
+
+**Xử lý lỗi:**
+
+- Hive box không mở được → emit TransactionErrorState
+- UI hiển thị error message với retry button
+
+---
+
+### 2. Thêm Transaction Mới
+
+```
+User nhấn nút "+" trên Transaction List Page
+         ↓
+Navigate to AddEditTransactionPage (mode: Add)
+         ↓
+UI hiển thị form với các trường:
+  - Số tiền (amount) - TextField với input type number
+  - Loại (income/expense) - Toggle button
+  - Category - Dropdown list (load từ CategoryRepository)
+  - Ngày - DatePicker (default: hôm nay)
+  - Ghi chú (note) - TextField optional
+         ↓
+User nhập đầy đủ thông tin
+         ↓
+User nhấn "Lưu"
+         ↓
+UI validate form:
+  - Amount > 0
+  - Category đã chọn
+  - Date không null
+         ↓
+Nếu validation pass:
+  UI dispatch AddTransactionEvent với TransactionEntity
+         ↓
+TransactionBloc nhận event
+         ↓
+BLoC gọi AddTransactionUseCase.call(entity)
+         ↓
+UseCase gọi Repository.addTransaction(entity)
+         ↓
+Repository chuyển đổi Entity → TransactionModel
+Repository generate ID nếu chưa có (UUID)
+         ↓
+Repository gọi DataSource.addTransaction(model)
+         ↓
+DataSource lưu vào Hive: box.put(model.id, model)
+         ↓
+Hive lưu thành công → trả void
+         ↓
+Repository trả Right(null)
+         ↓
+UseCase trả về BLoC
+         ↓
+BLoC emit TransactionAddedState
+         ↓
+UI:
+  - Pop AddEditTransactionPage
+  - Hiển thị SnackBar "Thêm giao dịch thành công"
+  - Transaction List Page tự động refresh (listen TransactionAddedState)
+  - Dispatch LoadAllTransactionsEvent để reload danh sách
+```
+
+**Validation Details:**
+
+- Amount: Phải > 0, không được để trống
+- Category: Bắt buộc phải chọn
+- Type: Income hoặc Expense (toggle)
+- Date: Không được để trống, có thể chọn quá khứ hoặc tương lai
+- Note: Optional, max 500 ký tự
+
+**Xử lý lỗi:**
+
+- Validation fail → hiển thị error text dưới TextField
+- Lưu Hive thất bại → emit TransactionErrorState
+- UI hiển thị error dialog với option retry
+
+---
+
+### 3. Cập Nhật Transaction
+
+```
+User tap vào 1 transaction trong danh sách
+         ↓
+Navigate to AddEditTransactionPage (mode: Edit)
+         ↓
+UI dispatch GetTransactionByIdEvent (để lấy chi tiết)
+         ↓
+BLoC gọi GetTransactionByIdUseCase
+         ↓
+UseCase gọi Repository.getTransactionById(id)
+         ↓
+Repository gọi DataSource.getAllTransactions()
+Repository filter để tìm transaction có id matching
+         ↓
+Repository convert Model → Entity
+         ↓
+Repository trả Either<Failure, TransactionEntity>
+         ↓
+BLoC emit TransactionDetailLoadedState
+         ↓
+UI pre-fill form với dữ liệu hiện tại:
+  - Amount → TextField
+  - Type → Toggle button
+  - Category → Dropdown (selected)
+  - Date → DatePicker
+  - Note → TextField
+         ↓
+User chỉnh sửa thông tin
+         ↓
+User nhấn "Lưu"
+         ↓
+UI validate form (tương tự Add)
+         ↓
+UI dispatch UpdateTransactionEvent với TransactionEntity đã chỉnh sửa
+         ↓
+BLoC gọi UpdateTransactionUseCase.call(entity)
+         ↓
+UseCase gọi Repository.updateTransaction(entity)
+         ↓
+Repository convert Entity → Model (giữ nguyên ID)
+         ↓
+Repository gọi DataSource.updateTransaction(model)
+         ↓
+DataSource: box.put(model.id, model) - overwrite
+         ↓
+Hive cập nhật thành công
+         ↓
+Repository trả Right(null)
+         ↓
+BLoC emit TransactionUpdatedState
+         ↓
+UI:
+  - Pop AddEditTransactionPage
+  - Hiển thị SnackBar "Cập nhật thành công"
+  - Refresh danh sách transactions
+```
+
+**Lưu ý:**
+
+- Giữ nguyên ID của transaction
+- Update = overwrite với cùng key trong Hive
+- Các transaction liên quan (statistics) tự động cập nhật khi reload
+
+---
+
+### 4. Xóa Transaction
+
+```
+User long-press hoặc swipe transaction item
+         ↓
+UI hiển thị menu với option "Xóa"
+         ↓
+User chọn "Xóa"
+         ↓
+UI hiển thị ConfirmDialog:
+  "Bạn có chắc muốn xóa giao dịch này?"
+  - Hiển thị thông tin transaction (amount, category, date)
+  - Buttons: "Hủy" và "Xóa"
+         ↓
+User nhấn "Xóa"
+         ↓
+UI dispatch DeleteTransactionEvent(id)
+         ↓
+BLoC gọi DeleteTransactionUseCase.call(id)
+         ↓
+UseCase gọi Repository.deleteTransaction(id)
+         ↓
+Repository gọi DataSource.deleteTransaction(id)
+         ↓
+DataSource: box.delete(id)
+         ↓
+Hive xóa thành công
+         ↓
+Repository trả Right(null)
+         ↓
+BLoC emit TransactionDeletedState
+         ↓
+UI:
+  - Hiển thị SnackBar "Đã xóa giao dịch"
+  - Transaction biến mất khỏi danh sách với animation
+  - Refresh danh sách
+```
+
+**Bảo vệ dữ liệu:**
 
 - Confirm dialog trước khi xóa
-- Swipe to delete
-- Xóa khỏi database
-- Refresh danh sách
-
-### 🛠 Công Nghệ Sử Dụng
-
-- **State Management**: flutter_bloc (BLoC pattern)
-- **Local Database**: Hive (tái sử dụng DashboardLocalDataSource)
-- **Date Picker**: Flutter built-in
-- **Validation**: Custom validators
-- **Number Formatting**: intl + CurrencyInputFormatter
-- **Error Handling**: Either pattern (dartz)
+- Không có undo (có thể thêm tính năng này sau)
+- Xóa transaction không ảnh hưởng đến categories
 
 ---
 
-## 2. Cấu Trúc Thư Mục
+### 5. Lọc Transactions Theo Loại
 
 ```
-lib/features/transaction/
-├── data/
-│   └── repositories/
-│       └── transaction_repository_impl.dart    # Implement repository
-│       # Note: Tái sử dụng DashboardLocalDataSource
-│       # Không cần tạo DataSource riêng
-│
-├── domain/
-│   ├── repositories/
-│   │   └── transaction_repository.dart         # Repository interface
-│   └── usecases/
-│       ├── get_all_transactions_usecase.dart   # READ: Get all
-│       ├── get_all_categories_usecase.dart     # READ: Get categories
-│       ├── add_transaction_usecase.dart        # CREATE: Add new
-│       ├── update_transaction_usecase.dart     # UPDATE: Edit
-│       └── delete_transaction_usecase.dart     # DELETE: Remove
-│
-└── presentation/
-    ├── bloc/
-    │   ├── transaction_bloc.dart               # Bloc chính
-    │   ├── transaction_event.dart              # Các events
-    │   └── transaction_state.dart              # Các states
-    ├── pages/
-    │   ├── transaction_list_page.dart          # Danh sách giao dịch
-    │   └── add_edit_transaction_page.dart      # Form thêm/sửa
-    └── widgets/
-        ├── transaction_list_item.dart          # Item trong list
-        └── transaction_filter_chips.dart       # Filter: All/Income/Expense
+User chọn filter button trên TransactionListPage
+         ↓
+UI hiển thị bottom sheet với options:
+  - Tất cả
+  - Thu nhập
+  - Chi tiêu
+         ↓
+User chọn "Thu nhập"
+         ↓
+UI dispatch FilterTransactionsByTypeEvent(TransactionType.income)
+         ↓
+BLoC gọi GetTransactionsByTypeUseCase.call(type)
+         ↓
+UseCase gọi Repository.getTransactionsByType(type)
+         ↓
+Repository gọi DataSource.getAllTransactions()
+Repository filter transactions có type = 'income'
+         ↓
+Repository convert Models → Entities
+Repository sort by date DESC
+         ↓
+Repository trả Either<Failure, List<TransactionEntity>>
+         ↓
+BLoC emit TransactionsLoadedState với danh sách đã lọc
+         ↓
+UI rebuild:
+  - Hiển thị chỉ transactions thu nhập
+  - Header hiển thị filter hiện tại
+  - Tổng số tiền thu nhập
 ```
 
-### 📝 Note về DataSource
+**Filter Options:**
 
-Transaction feature **tái sử dụng** `DashboardLocalDataSource` đã có sẵn thay vì tạo mới:
-
-- Tránh duplicate code
-- Dữ liệu consistency
-- Dễ maintain
+- All: Hiển thị tất cả transactions
+- Income: Chỉ transactions có type = income
+- Expense: Chỉ transactions có type = expense
 
 ---
 
-## 3. Luồng Xử Lý CRUD
-
-### 📊 Tổng Quan Data Flow
+### 6. Load Categories Cho Dropdown
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    USER INTERACTIONS                             │
-└────────┬────────────────────────────────────────────────────────┘
-         │
-         ├─ View List ────────────────────────────────┐
-         ├─ Add Transaction ──────────────────────────┤
-         ├─ Edit Transaction ─────────────────────────┤
-         └─ Delete Transaction ───────────────────────┤
-                                                       │
-         ┌─────────────────────────────────────────────┘
-         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    PRESENTATION LAYER                            │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  TransactionListPage / AddEditTransactionPage             │ │
-│  │  - User tương tác (tap button, nhập form, swipe...)       │ │
-│  │  - Dispatch event tương ứng                               │ │
-│  └────────┬───────────────────────────────────────────────────┘ │
-│           │                                                      │
-│           ▼                                                      │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  TransactionBloc                                           │ │
-│  │  - Nhận event từ UI                                        │ │
-│  │  - Emit loading state                                      │ │
-│  │  - Gọi UseCase tương ứng                                   │ │
-│  │  - Emit success/error state                                │ │
-│  └────────┬───────────────────────────────────────────────────┘ │
-└───────────┼──────────────────────────────────────────────────────┘
-            │
-            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        DOMAIN LAYER                              │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  UseCases (Business Logic)                                 │ │
-│  │                                                             │ │
-│  │  GetAllTransactionsUseCase                                 │ │
-│  │    └─ Lấy danh sách tất cả giao dịch                       │ │
-│  │                                                             │ │
-│  │  AddTransactionUseCase                                     │ │
-│  │    └─ Thêm giao dịch mới                                   │ │
-│  │                                                             │ │
-│  │  UpdateTransactionUseCase                                  │ │
-│  │    └─ Cập nhật giao dịch existing                          │ │
-│  │                                                             │ │
-│  │  DeleteTransactionUseCase                                  │ │
-│  │    └─ Xóa giao dịch theo ID                                │ │
-│  │                                                             │ │
-│  │  GetAllCategoriesUseCase                                   │ │
-│  │    └─ Lấy danh sách categories để chọn                     │ │
-│  └────────┬───────────────────────────────────────────────────┘ │
-│           │ calls                                                │
-│           ▼                                                      │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  TransactionRepository (Interface)                         │ │
-│  │  - getAllTransactions()                                    │ │
-│  │  - addTransaction(entity)                                  │ │
-│  │  - updateTransaction(entity)                               │ │
-│  │  - deleteTransaction(id)                                   │ │
-│  │  - getAllCategories()                                      │ │
-│  └────────┬───────────────────────────────────────────────────┘ │
-└───────────┼──────────────────────────────────────────────────────┘
-            │ implemented by
-            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                         DATA LAYER                               │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  TransactionRepositoryImpl                                 │ │
-│  │  - Convert Entity ↔ Model                                  │ │
-│  │  - Call DashboardLocalDataSource                           │ │
-│  │  - Handle exceptions → return Either                       │ │
-│  └────────┬───────────────────────────────────────────────────┘ │
-│           │ uses                                                 │
-│           ▼                                                      │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  DashboardLocalDataSource (Hive)                           │ │
-│  │  - getAllTransactions()                                    │ │
-│  │  - addTransaction(model)                                   │ │
-│  │  - updateTransaction(model)                                │ │
-│  │  - deleteTransaction(id)                                   │ │
-│  │  - getAllCategories()                                      │ │
-│  └────────┬───────────────────────────────────────────────────┘ │
-└───────────┼──────────────────────────────────────────────────────┘
-            │
-            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                         HIVE DATABASE                            │
-│  Box<TransactionModel>                                           │
-│  Box<CategoryModel>                                              │
-└─────────────────────────────────────────────────────────────────┘
+AddEditTransactionPage khởi tạo
+         ↓
+UI dispatch LoadCategoriesEvent
+         ↓
+BLoC gọi GetAllCategoriesUseCase
+         ↓
+UseCase gọi TransactionRepository.getAllCategories()
+         ↓
+Repository gọi CategoryManagementRepository.getAllCategories()
+         ↓
+Category Repository gọi CategoryLocalDataSource
+         ↓
+DataSource lấy tất cả categories từ Hive box 'categories'
+         ↓
+Trả về List<CategoryEntity>
+         ↓
+UI hiển thị dropdown với:
+  - Icon của category
+  - Tên category
+  - Màu sắc
+  - Group by type (Income categories / Expense categories)
 ```
+
+**Lưu ý:**
+
+- Transaction Repository inject CategoryManagementRepository
+- Tuân thủ Clean Architecture: Feature không trực tiếp gọi DataSource của feature khác
 
 ---
 
-## 4. Presentation Layer
+## 📦 Data Flow Chi Tiết
 
-### 📱 UI Screens
+### Domain Layer
 
-#### 1. **TransactionListPage**
-
-**File**: `transaction_list_page.dart`
-
-**Trách nhiệm**:
-
-- Hiển thị danh sách giao dịch
-- Filter theo loại (Tất cả/Thu/Chi)
-- Navigate đến form thêm/sửa
-- Xử lý swipe to delete
-
-**UI Components**:
-
-```dart
-class TransactionListPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Danh sách giao dịch'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => context.push('/transactions/add'),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Filter chips
-          TransactionFilterChips(),
-
-          // List
-          BlocBuilder<TransactionBloc, TransactionState>(
-            builder: (context, state) {
-              if (state is TransactionLoading) {
-                return CircularProgressIndicator();
-              }
-
-              if (state is TransactionLoaded) {
-                return ListView.builder(
-                  itemCount: state.transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = state.transactions[index];
-                    return TransactionListItem(
-                      transaction: transaction,
-                      onTap: () => _editTransaction(transaction),
-                      onDelete: () => _deleteTransaction(transaction.id),
-                    );
-                  },
-                );
-              }
-
-              return Text('No data');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-
-#### 2. **AddEditTransactionPage**
-
-**File**: `add_edit_transaction_page.dart`
-
-**Trách nhiệm**:
-
-- Form nhập/sửa giao dịch
-- Validation
-- Submit data
-
-**Form Fields**:
-
-- Số tiền (TextField với CurrencyInputFormatter)
-- Mô tả (TextField)
-- Ngày (DatePicker)
-- Loại (Income/Expense Segment)
-- Nhóm (Dropdown Categories)
-
-### 🎛 TransactionBloc
-
-**File**: `transaction_bloc.dart`
-
-```dart
-class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
-  final GetAllTransactionsUseCase getAllTransactionsUseCase;
-  final GetAllCategoriesUseCase getAllCategoriesUseCase;
-  final AddTransactionUseCase addTransactionUseCase;
-  final UpdateTransactionUseCase updateTransactionUseCase;
-  final DeleteTransactionUseCase deleteTransactionUseCase;
-
-  TransactionBloc({
-    required this.getAllTransactionsUseCase,
-    required this.getAllCategoriesUseCase,
-    required this.addTransactionUseCase,
-    required this.updateTransactionUseCase,
-    required this.deleteTransactionUseCase,
-  }) : super(TransactionInitial()) {
-    on<LoadTransactions>(_onLoadTransactions);
-    on<ChangeTransactionFilter>(_onChangeTransactionFilter);
-    on<AddTransaction>(_onAddTransaction);
-    on<UpdateTransaction>(_onUpdateTransaction);
-    on<DeleteTransaction>(_onDeleteTransaction);
-    on<RefreshTransactions>(_onRefreshTransactions);
-  }
-}
-```
-
-**Đặc điểm**:
-
-- Quản lý 5 UseCases
-- Handle 6 loại events
-- Emit các states tương ứng với từng action
-
-### 📤 Events
-
-**File**: `transaction_event.dart`
-
-```dart
-// 1. LoadTransactions - Load danh sách lần đầu
-class LoadTransactions extends TransactionEvent {
-  // Không có parameters
-}
-
-// 2. ChangeTransactionFilter - Thay đổi filter
-class ChangeTransactionFilter extends TransactionEvent {
-  final TransactionFilter filter;  // all / income / expense
-}
-
-// 3. AddTransaction - Thêm giao dịch mới
-class AddTransaction extends TransactionEvent {
-  final TransactionEntity transaction;
-}
-
-// 4. UpdateTransaction - Cập nhật giao dịch
-class UpdateTransaction extends TransactionEvent {
-  final TransactionEntity transaction;
-}
-
-// 5. DeleteTransaction - Xóa giao dịch
-class DeleteTransaction extends TransactionEvent {
-  final String id;
-}
-
-// 6. RefreshTransactions - Refresh danh sách
-class RefreshTransactions extends TransactionEvent {
-  // Internally gọi LoadTransactions
-}
-```
-
-### 📥 States
-
-**File**: `transaction_state.dart`
-
-```dart
-// 1. TransactionInitial - State ban đầu
-class TransactionInitial extends TransactionState {}
-
-// 2. TransactionLoading - Đang load dữ liệu
-class TransactionLoading extends TransactionState {}
-
-// 3. TransactionLoaded - Load thành công
-class TransactionLoaded extends TransactionState {
-  final List<TransactionEntity> transactions;    // Danh sách giao dịch
-  final List<CategoryEntity> categories;         // Danh sách categories
-  final TransactionFilter currentFilter;         // Filter hiện tại
-
-  // copyWith() để update state partially
-  TransactionLoaded copyWith({...});
-}
-
-// 4. TransactionActionInProgress - Đang thực hiện action (add/update/delete)
-class TransactionActionInProgress extends TransactionState {}
-
-// 5. TransactionActionSuccess - Action thành công
-class TransactionActionSuccess extends TransactionState {
-  final String message;  // "Thêm thành công", "Xóa thành công"...
-}
-
-// 6. TransactionError - Có lỗi xảy ra
-class TransactionError extends TransactionState {
-  final String message;
-}
-```
-
-**State Flow**:
+**TransactionEntity:**
 
 ```
-TransactionInitial
-    ↓ LoadTransactions event
-TransactionLoading
-    ↓ Success
-TransactionLoaded
-    ↓ AddTransaction event
-TransactionActionInProgress
-    ↓ Success
-TransactionActionSuccess
-    ↓ Auto reload
-TransactionLoading
-    ↓
-TransactionLoaded (with new data)
+Thuộc tính:
+- id: String (UUID)
+- amount: double (số tiền)
+- type: TransactionType (income/expense)
+- categoryId: String (liên kết với category)
+- date: DateTime (ngày giao dịch)
+- note: String (ghi chú, optional)
 ```
 
-### 🔄 Bloc Event Handlers
+**Repository Interface:**
 
-#### **\_onLoadTransactions**
+- `getAllTransactions()` → Lấy tất cả
+- `getTransactionsByType(type)` → Lọc theo income/expense
+- `getTransactionById(id)` → Lấy 1 transaction
+- `addTransaction(entity)` → Thêm mới
+- `updateTransaction(entity)` → Cập nhật
+- `deleteTransaction(id)` → Xóa
+- `clearAllTransactions()` → Xóa tất cả (testing/reset)
+- `getAllCategories()` → Lấy categories cho dropdown
 
-```dart
-Future<void> _onLoadTransactions(
-  LoadTransactions event,
-  Emitter<TransactionState> emit,
-) async {
-  emit(TransactionLoading());
+**UseCases:**
 
-  // Load transactions và categories song song
-  final transactionsResult = await getAllTransactionsUseCase(NoParams());
-  final categoriesResult = await getAllCategoriesUseCase(NoParams());
+- `GetAllTransactionsUseCase`: Lấy toàn bộ danh sách
+- `GetTransactionsByTypeUseCase`: Lọc theo loại
+- `AddTransactionUseCase`: Thêm với validation
+- `UpdateTransactionUseCase`: Cập nhật
+- `DeleteTransactionUseCase`: Xóa
+- `GetAllCategoriesUseCase`: Lấy categories (cho dropdown)
 
-  // Check results
-  if (transactionsResult.isLeft() || categoriesResult.isLeft()) {
-    emit(TransactionError(message: 'Không thể tải dữ liệu'));
-    return;
-  }
+---
 
-  // Extract data
-  final transactions = transactionsResult.getOrElse(() => []);
-  final categories = categoriesResult.getOrElse(() => []);
+### Data Layer
 
-  // Emit loaded state
-  emit(TransactionLoaded(
-    transactions: transactions,
-    categories: categories,
-    currentFilter: TransactionFilter.all,
-  ));
-}
+**TransactionModel:**
+
+```
+@HiveType(typeId: 0)
+- Chứa @HiveField(0..6) cho từng thuộc tính
+- Methods: toEntity(), fromEntity()
+- Được generate bởi build_runner → transaction_model.g.dart
 ```
 
-#### **\_onAddTransaction**
+**TransactionLocalDataSource:**
 
-```dart
-Future<void> _onAddTransaction(
-  AddTransaction event,
-  Emitter<TransactionState> emit,
-) async {
-  // Lưu state để restore nếu lỗi
-  final previousState = state;
+**Interface (transaction_local_data_source.dart):**
 
-  // Show loading
-  emit(TransactionActionInProgress());
+- Định nghĩa contract
+- Không phụ thuộc Hive
 
-  // Call UseCase
-  final result = await addTransactionUseCase(
-    AddTransactionParams(transaction: event.transaction),
-  );
+**Implementation (transaction_local_data_source_impl.dart):**
 
-  // Handle result
-  result.fold(
-    // Error case
-    (failure) {
-      emit(TransactionError(message: 'Không thể thêm giao dịch'));
-      // Restore previous state
-      if (previousState is TransactionLoaded) {
-        emit(previousState);
-      }
-    },
-    // Success case
-    (_) {
-      emit(TransactionActionSuccess(message: 'Thêm giao dịch thành công'));
-      // Reload to get fresh data
-      add(LoadTransactions());
-    },
-  );
-}
+- `init()`: Mở Hive box 'transactions'
+- `getAllTransactions()`: Lấy box.values.toList()
+- `getTransactionsByDateRange(start, end)`: Filter transactions trong khoảng thời gian
+- `addTransaction(model)`: box.put(model.id, model)
+- `updateTransaction(model)`: box.put(model.id, model)
+- `deleteTransaction(id)`: box.delete(id)
+- `clearAllTransactions()`: box.clear()
+
+**Logic Filter Date Range:**
+
+```
+Nhận startDate và endDate
+Lấy tất cả transactions
+Filter với điều kiện:
+  - transaction.date >= startDate
+  - transaction.date <= endDate
+Trả về danh sách đã filter
+```
+
+**TransactionRepositoryImpl:**
+
+- Inject 2 dependencies:
+  1. TransactionLocalDataSource (để CRUD transactions)
+  2. CategoryManagementRepository (để lấy categories)
+- Mỗi method:
+  1. Gọi DataSource lấy/lưu Models
+  2. Convert Model ↔ Entity
+  3. Bọc trong Either<Failure, Data>
+  4. Catch exceptions → Left(CacheFailure)
+
+---
+
+### Presentation Layer
+
+**TransactionBloc:**
+
+**Events:**
+
+- `LoadAllTransactionsEvent`: Load tất cả
+- `FilterTransactionsByTypeEvent`: Lọc theo loại
+- `AddTransactionEvent`: Thêm mới
+- `UpdateTransactionEvent`: Cập nhật
+- `DeleteTransactionEvent`: Xóa
+- `GetTransactionByIdEvent`: Lấy chi tiết 1 transaction
+- `LoadCategoriesEvent`: Load categories cho dropdown
+
+**States:**
+
+- `TransactionInitialState`: State ban đầu
+- `TransactionLoadingState`: Đang load
+- `TransactionsLoadedState`: Load thành công + List<TransactionEntity>
+- `TransactionDetailLoadedState`: Chi tiết 1 transaction
+- `TransactionAddedState`: Thêm thành công
+- `TransactionUpdatedState`: Cập nhật thành công
+- `TransactionDeletedState`: Xóa thành công
+- `CategoriesLoadedState`: Categories đã load cho dropdown
+- `TransactionErrorState`: Có lỗi + error message
+
+**UI Pages:**
+
+**1. TransactionListPage:**
+
+- Hiển thị danh sách transactions
+- Group by date (Hôm nay, Hôm qua, Tuần này, Tháng này, v.v.)
+- Mỗi item hiển thị:
+  - Icon category với màu sắc
+  - Tên category
+  - Note (nếu có)
+  - Amount với màu (xanh = thu, đỏ = chi)
+  - Thời gian (HH:mm)
+- Swipe để xóa
+- Tap để edit
+- FAB button "+" để thêm mới
+- Filter button (All/Income/Expense)
+
+**2. AddEditTransactionPage:**
+
+- Mode được xác định bởi có truyền transaction vào không
+- Form fields:
+  - Amount TextField (keyboard number)
+  - Type toggle (Income/Expense) với animation
+  - Category Dropdown với search
+  - DatePicker (hiển thị calendar)
+  - Note TextField (optional, multiline)
+- Validation real-time
+- Preview card hiển thị transaction trước khi lưu
+- Buttons: "Hủy" và "Lưu"
+
+---
+
+## 🔗 Dependency Injection
+
+### Đăng Ký (injection_container.dart)
+
+**Data Layer:**
+
+```
+TransactionLocalDataSource:
+  → TransactionLocalDataSourceImpl singleton
+  → Init Hive box khi app start
+```
+
+**Domain Layer:**
+
+```
+TransactionRepository:
+  → TransactionRepositoryImpl
+  → Inject TransactionLocalDataSource + CategoryManagementRepository
+  → Singleton
+
+UseCases:
+  → Inject TransactionRepository
+  → Lazy singleton
+```
+
+**Presentation Layer:**
+
+```
+TransactionBloc:
+  → Inject tất cả UseCases
+  → Factory (new instance mỗi khi navigate to page)
 ```
 
 ---
 
-## 5. Domain Layer
+## 🎯 Business Rules
 
-### 📦 Entities
+### Validation Rules
 
-#### **TransactionEntity**
+**Amount:**
 
-**File**: Shared từ Dashboard feature
+- Bắt buộc nhập
+- Phải > 0
+- Không giới hạn số chữ số (để linh hoạt)
+- Format hiển thị: #,###.##
 
-```dart
-class TransactionEntity extends Equatable {
-  final String id;              // UUID
-  final String categoryId;      // FK to Category
-  final String description;     // "Mua cà phê", "Nhận lương"...
-  final double amount;          // 50000.0
-  final DateTime date;          // 2025-10-31
-  final TransactionType type;   // income / expense
+**Type:**
 
-  // Enum
-  enum TransactionType { income, expense }
-}
-```
+- Bắt buộc chọn (income hoặc expense)
+- Default: expense (vì chi tiêu thường xuyên hơn)
 
-### ⚙️ UseCases
+**Category:**
 
-Transaction feature có **5 UseCases** chính:
+- Bắt buộc chọn
+- Dropdown chỉ hiển thị categories phù hợp với type:
+  - Type = income → chỉ hiển thị income categories + both
+  - Type = expense → chỉ hiển thị expense categories + both
 
-#### 1. **GetAllTransactionsUseCase** (READ)
+**Date:**
 
-**File**: `get_all_transactions_usecase.dart`
+- Bắt buộc chọn
+- Default: hôm nay
+- Cho phép chọn quá khứ (nhập giao dịch cũ)
+- Cho phép chọn tương lai (giao dịch dự kiến)
 
-```dart
-class GetAllTransactionsUseCase
-    implements UseCase<List<TransactionEntity>, NoParams> {
-  final TransactionRepository repository;
+**Note:**
 
-  GetAllTransactionsUseCase(this.repository);
-
-  @override
-  Future<Either<Failure, List<TransactionEntity>>> call(NoParams params) async {
-    return await repository.getAllTransactions();
-  }
-}
-```
-
-**Trách nhiệm**:
-
-- Lấy tất cả giao dịch từ repository
-- Không có parameters (NoParams)
-- Trả về danh sách TransactionEntity
-- Repository sẽ sort theo ngày mới nhất
-
-**Khi nào gọi?**
-
-- Khi mở TransactionListPage lần đầu
-- Sau khi thêm/sửa/xóa giao dịch (để refresh)
-- Khi pull-to-refresh
+- Optional
+- Max 500 ký tự
+- Multiline
 
 ---
 
-#### 2. **AddTransactionUseCase** (CREATE)
+## 🚀 Tính Năng Nâng Cao
 
-**File**: `add_transaction_usecase.dart`
+### Sort và Group
 
-```dart
-class AddTransactionUseCase implements UseCase<void, AddTransactionParams> {
-  final TransactionRepository repository;
+**Sort:**
 
-  AddTransactionUseCase(this.repository);
+- Mặc định: Ngày mới nhất lên đầu
+- Có thể sort theo: Amount (cao → thấp)
 
-  @override
-  Future<Either<Failure, void>> call(AddTransactionParams params) async {
-    return await repository.addTransaction(params.transaction);
-  }
-}
+**Group By Date:**
 
-// Parameters
-class AddTransactionParams extends Equatable {
-  final TransactionEntity transaction;
+```
+Hôm nay (Today)
+  - Các transactions trong ngày hôm nay
+  - Hiển thị tổng thu, tổng chi
 
-  const AddTransactionParams({required this.transaction});
+Hôm qua (Yesterday)
+  - Transactions của ngày hôm qua
 
-  @override
-  List<Object?> get props => [transaction];
-}
+Tuần này (This Week)
+  - Từ thứ 2 đầu tuần đến hôm nay
+
+Tháng này (This Month)
+  - Từ ngày 1 đến hôm nay
+
+Tháng trước (Last Month)
+  - Toàn bộ tháng trước
+
+Cũ hơn (Older)
+  - Tất cả transactions trước tháng trước
 ```
 
-**Trách nhiệm**:
+### Search
 
-- Thêm giao dịch mới vào database
-- Nhận TransactionEntity từ UI
-- Validate có thể thêm ở đây (nếu cần business rules)
+**Search by:**
 
-**Validation có thể thêm**:
+- Note/Description
+- Category name
+- Amount (exact hoặc range)
 
-```dart
-@override
-Future<Either<Failure, void>> call(AddTransactionParams params) async {
-  // Business validation
-  if (params.transaction.amount <= 0) {
-    return Left(ValidationFailure(message: 'Số tiền phải lớn hơn 0'));
-  }
-
-  if (params.transaction.description.isEmpty) {
-    return Left(ValidationFailure(message: 'Vui lòng nhập mô tả'));
-  }
-
-  return await repository.addTransaction(params.transaction);
-}
-```
-
-**Khi nào gọi?**
-
-- User nhấn "Lưu" ở AddTransactionPage
-- Form đã validate ở UI level
-- UseCase có thể thêm business validation
+**Không implement trong version hiện tại** - để cho phase sau
 
 ---
 
-#### 3. **UpdateTransactionUseCase** (UPDATE)
+## 🔄 Tương Tác Với Features Khác
 
-**File**: `update_transaction_usecase.dart`
+### Dashboard Feature
 
-```dart
-class UpdateTransactionUseCase
-    implements UseCase<void, UpdateTransactionParams> {
-  final TransactionRepository repository;
+Dashboard đọc transactions qua TransactionRepository:
 
-  UpdateTransactionUseCase(this.repository);
-
-  @override
-  Future<Either<Failure, void>> call(UpdateTransactionParams params) async {
-    return await repository.updateTransaction(params.transaction);
-  }
-}
-
-// Parameters
-class UpdateTransactionParams extends Equatable {
-  final TransactionEntity transaction;
-
-  const UpdateTransactionParams({required this.transaction});
-
-  @override
-  List<Object?> get props => [transaction];
-}
+```
+Dashboard không trực tiếp gọi TransactionLocalDataSource
+Dashboard inject TransactionRepository
+Dashboard gọi repository.getAllTransactions()
+Dashboard tính toán statistics từ transactions
 ```
 
-**Trách nhiệm**:
+### Statistics Feature
 
-- Cập nhật giao dịch existing
-- Transaction phải có ID hợp lệ
-- Update toàn bộ fields
+Statistics đọc transactions để phân tích:
 
-**Khi nào gọi?**
-
-- User edit transaction và nhấn "Lưu"
-- Transaction entity được pre-fill với data cũ
-- User chỉ sửa một số fields
-
----
-
-#### 4. **DeleteTransactionUseCase** (DELETE)
-
-**File**: `delete_transaction_usecase.dart`
-
-```dart
-class DeleteTransactionUseCase
-    implements UseCase<void, DeleteTransactionParams> {
-  final TransactionRepository repository;
-
-  DeleteTransactionUseCase(this.repository);
-
-  @override
-  Future<Either<Failure, void>> call(DeleteTransactionParams params) async {
-    return await repository.deleteTransaction(params.id);
-  }
-}
-
-// Parameters
-class DeleteTransactionParams extends Equatable {
-  final String id;
-
-  const DeleteTransactionParams({required this.id});
-
-  @override
-  List<Object?> get props => [id];
-}
+```
+Statistics inject TransactionLocalDataSource trực tiếp
+Statistics filter transactions theo date range
+Statistics group theo category, theo tháng
+Statistics tính toán charts data
 ```
 
-**Trách nhiệm**:
+### Category Feature
 
-- Xóa giao dịch theo ID
-- Chỉ cần ID, không cần toàn bộ entity
+Transaction cần categories để hiển thị:
 
-**Khi nào gọi?**
-
-- User swipe to delete
-- User tap icon delete và confirm
-- Sau khi show confirmation dialog
-
----
-
-#### 5. **GetAllCategoriesUseCase** (READ)
-
-**File**: `get_all_categories_usecase.dart`
-
-```dart
-class GetAllCategoriesUseCase
-    implements UseCase<List<CategoryEntity>, NoParams> {
-  final TransactionRepository repository;
-
-  GetAllCategoriesUseCase(this.repository);
-
-  @override
-  Future<Either<Failure, List<CategoryEntity>>> call(NoParams params) async {
-    return await repository.getAllCategories();
-  }
-}
 ```
-
-**Trách nhiệm**:
-
-- Lấy danh sách categories để hiển thị trong dropdown
-- Dùng khi add/edit transaction (chọn category)
-- NoParams vì lấy tất cả
-
-**Khi nào gọi?**
-
-- Khi mở AddEditTransactionPage
-- Khi load TransactionListPage (để map category info)
-
----
-
-### 🔌 Repository Interface
-
-**File**: `transaction_repository.dart`
-
-```dart
-abstract class TransactionRepository {
-  // READ operations
-  Future<Either<Failure, List<TransactionEntity>>> getAllTransactions();
-  Future<Either<Failure, List<TransactionEntity>>> getTransactionsByType(
-    TransactionType type,
-  );
-  Future<Either<Failure, TransactionEntity>> getTransactionById(String id);
-  Future<Either<Failure, List<CategoryEntity>>> getAllCategories();
-
-  // WRITE operations
-  Future<Either<Failure, void>> addTransaction(TransactionEntity transaction);
-  Future<Either<Failure, void>> updateTransaction(TransactionEntity transaction);
-  Future<Either<Failure, void>> deleteTransaction(String id);
-}
-```
-
-**Tại sao cần interface?**
-
-- Domain layer chỉ định nghĩa "cái gì" (what)
-- Data layer implement "như thế nào" (how)
-- Dễ test (mock repository)
-- Dễ thay đổi implementation (Hive → SQLite → API)
-
----
-
-## 6. Data Layer
-
-### 🏗 Repository Implementation
-
-**File**: `transaction_repository_impl.dart`
-
-```dart
-class TransactionRepositoryImpl implements TransactionRepository {
-  final DashboardLocalDataSource localDataSource;
-
-  TransactionRepositoryImpl({required this.localDataSource});
-
-  @override
-  Future<Either<Failure, List<TransactionEntity>>> getAllTransactions() async {
-    try {
-      // 1. Get models from DataSource
-      final models = await localDataSource.getAllTransactions();
-
-      // 2. Convert Model → Entity
-      final entities = models.map((model) => model.toEntity()).toList();
-
-      // 3. Business logic: Sort by date descending
-      entities.sort((a, b) => b.date.compareTo(a.date));
-
-      return Right(entities);
-    } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> addTransaction(
-    TransactionEntity transaction,
-  ) async {
-    try {
-      // 1. Convert Entity → Model
-      final model = TransactionModel.fromEntity(transaction);
-
-      // 2. Save to DataSource
-      await localDataSource.addTransaction(model);
-
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> updateTransaction(
-    TransactionEntity transaction,
-  ) async {
-    try {
-      final model = TransactionModel.fromEntity(transaction);
-      await localDataSource.updateTransaction(model);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> deleteTransaction(String id) async {
-    try {
-      await localDataSource.deleteTransaction(id);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<CategoryEntity>>> getAllCategories() async {
-    try {
-      final models = await localDataSource.getAllCategories();
-      final entities = models.map((model) => model.toEntity()).toList();
-      return Right(entities);
-    } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
-    }
-  }
-}
-```
-
-**Trách nhiệm**:
-
-- Convert Entity ↔ Model
-- Call DataSource methods
-- Catch exceptions → return Either
-- Thêm business logic (như sort)
-
----
-
-### 💾 DataSource
-
-Transaction feature **TÁI SỬ DỤNG** `DashboardLocalDataSource`:
-
-**File**: `dashboard_local_data_source.dart` (đã có sẵn)
-
-```dart
-abstract class DashboardLocalDataSource {
-  // Transactions
-  Future<List<TransactionModel>> getAllTransactions();
-  Future<void> addTransaction(TransactionModel transaction);
-  Future<void> updateTransaction(TransactionModel transaction);
-  Future<void> deleteTransaction(String id);
-
-  // Categories
-  Future<List<CategoryModel>> getAllCategories();
-}
-```
-
-**Implementation**: `dashboard_local_data_source_impl.dart`
-
-```dart
-class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
-  Box<TransactionModel>? _transactionBox;
-
-  @override
-  Future<List<TransactionModel>> getAllTransactions() async {
-    return _transactionBox!.values.toList();
-  }
-
-  @override
-  Future<void> addTransaction(TransactionModel transaction) async {
-    await _transactionBox!.put(transaction.id, transaction);
-  }
-
-  @override
-  Future<void> updateTransaction(TransactionModel transaction) async {
-    await _transactionBox!.put(transaction.id, transaction);
-  }
-
-  @override
-  Future<void> deleteTransaction(String id) async {
-    await _transactionBox!.delete(id);
-  }
-}
-```
-
-**Hive Operations**:
-
-- `box.values.toList()` - Get all
-- `box.put(key, value)` - Add/Update
-- `box.delete(key)` - Delete
-- `box.get(key)` - Get by key
-
----
-
-## 7. Ví Dụ Chi Tiết: Thêm Giao Dịch
-
-### 📱 Scenario: User thêm giao dịch "Mua cà phê - 25.000đ"
-
-#### **Bước 1: User mở AddTransactionPage**
-
-```dart
-// User tap nút "+" từ TransactionListPage
-await context.push('/transactions/add');
-
-// AddEditTransactionPage được render
-class AddEditTransactionPage extends StatefulWidget {
-  final TransactionEntity? transaction;  // null khi add, có data khi edit
-
-  @override
-  void initState() {
-    super.initState();
-    // Load categories để hiển thị dropdown
-    context.read<TransactionBloc>().add(LoadTransactions());
-  }
-}
-```
-
-#### **Bước 2: User nhập thông tin**
-
-```dart
-// Form fields
-TextField(
-  controller: _amountController,
-  inputFormatters: [CurrencyInputFormatter()],
-  // User nhập: "25000" → Hiển thị: "25.000"
-)
-
-TextField(
-  controller: _descriptionController,
-  // User nhập: "Mua cà phê"
-)
-
-// User chọn category từ dropdown
-DropdownButton<String>(
-  items: categories.map((cat) => DropdownMenuItem(
-    value: cat.id,
-    child: Text(cat.name),
-  )).toList(),
-  onChanged: (categoryId) {
-    setState(() => selectedCategoryId = categoryId);
-  },
-)
-
-// User chọn ngày
-DatePicker.showDatePicker(
-  context: context,
-  initialDate: DateTime.now(),
-  onDateSelected: (date) {
-    setState(() => selectedDate = date);
-  },
-)
-
-// User chọn loại
-SegmentedButton(
-  segments: [
-    ButtonSegment(value: TransactionType.expense, label: Text('Chi')),
-    ButtonSegment(value: TransactionType.income, label: Text('Thu')),
-  ],
-  selected: {selectedType},
-  onSelectionChanged: (Set<TransactionType> newSelection) {
-    setState(() => selectedType = newSelection.first);
-  },
-)
-```
-
-#### **Bước 3: User nhấn "Lưu"**
-
-```dart
-// Trong AddEditTransactionPage
-void _handleSave() {
-  // 1. Validate
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
-
-  // 2. Parse amount từ formatted string
-  final amount = CurrencyInputFormatter.getNumericValue(
-    _amountController.text
-  ); // "25.000" → 25000.0
-
-  // 3. Tạo TransactionEntity
-  final transaction = TransactionEntity(
-    id: widget.transaction?.id ?? Uuid().v4(),  // Generate UUID nếu add mới
-    categoryId: selectedCategoryId!,
-    description: _descriptionController.text,
-    amount: amount!,
-    date: selectedDate,
-    type: selectedType,
-  );
-
-  // 4. Dispatch event đến Bloc
-  context.read<TransactionBloc>().add(
-    AddTransaction(transaction: transaction),
-  );
-}
-```
-
-#### **Bước 4: TransactionBloc xử lý event**
-
-```dart
-// transaction_bloc.dart
-Future<void> _onAddTransaction(
-  AddTransaction event,
-  Emitter<TransactionState> emit,
-) async {
-  print('🎛 Bloc: Received AddTransaction event');
-  print('🎛 Transaction: ${event.transaction.description}');
-
-  // Lưu state hiện tại để restore nếu lỗi
-  final previousState = state;
-
-  // Step 1: Emit loading state
-  emit(TransactionActionInProgress());
-  print('🎛 Bloc: Emitting TransactionActionInProgress');
-
-  // Step 2: Call UseCase
-  final result = await addTransactionUseCase(
-    AddTransactionParams(transaction: event.transaction),
-  );
-  print('📞 Bloc: Called AddTransactionUseCase');
-
-  // Step 3: Handle result
-  result.fold(
-    // Error case
-    (failure) {
-      print('❌ Bloc: Error - ${failure.message}');
-      emit(TransactionError(message: 'Không thể thêm giao dịch'));
-
-      // Restore previous state để user không mất data đang xem
-      if (previousState is TransactionLoaded) {
-        emit(previousState);
-      }
-    },
-    // Success case
-    (_) {
-      print('✅ Bloc: Success');
-      emit(TransactionActionSuccess(message: 'Thêm giao dịch thành công'));
-
-      // Reload transactions để get fresh data
-      add(LoadTransactions());
-    },
-  );
-}
-```
-
-#### **Bước 5: UseCase thực thi**
-
-```dart
-// add_transaction_usecase.dart
-@override
-Future<Either<Failure, void>> call(AddTransactionParams params) async {
-  print('📞 UseCase: Received params');
-  print('📞 Amount: ${params.transaction.amount}');
-  print('📞 Description: ${params.transaction.description}');
-
-  // Call repository
-  final result = await repository.addTransaction(params.transaction);
-  print('📞 UseCase: Repository call completed');
-
-  return result;
-}
-```
-
-#### **Bước 6: Repository thực hiện**
-
-```dart
-// transaction_repository_impl.dart
-@override
-Future<Either<Failure, void>> addTransaction(
-  TransactionEntity transaction,
-) async {
-  try {
-    print('🏗 Repository: Converting Entity to Model');
-
-    // 1. Convert Entity → Model
-    final model = TransactionModel.fromEntity(transaction);
-
-    print('🏗 Model ID: ${model.id}');
-    print('🏗 Model amount: ${model.amount}');
-    print('🏗 Model type: ${model.type}');
-
-    // 2. Call DataSource to save
-    print('🏗 Repository: Calling DataSource.addTransaction()');
-    await localDataSource.addTransaction(model);
-
-    print('✅ Repository: Transaction saved successfully');
-    return const Right(null);
-  } catch (e) {
-    print('❌ Repository: Error - $e');
-    return Left(CacheFailure(message: e.toString()));
-  }
-}
-```
-
-#### **Bước 7: DataSource lưu vào Hive**
-
-```dart
-// dashboard_local_data_source_impl.dart
-@override
-Future<void> addTransaction(TransactionModel transaction) async {
-  print('💾 DataSource: Saving to Hive');
-  print('💾 Box: ${_transactionBox!.name}');
-  print('💾 Transaction ID: ${transaction.id}');
-
-  // Save to Hive
-  await _transactionBox!.put(transaction.id, transaction);
-
-  print('✅ DataSource: Saved successfully');
-  print('💾 Total transactions in box: ${_transactionBox!.length}');
-}
-```
-
-#### **Bước 8: Bloc reload data**
-
-```dart
-// Sau khi emit TransactionActionSuccess, Bloc dispatch LoadTransactions
-add(LoadTransactions());
-
-// LoadTransactions được xử lý
-Future<void> _onLoadTransactions(...) async {
-  emit(TransactionLoading());
-
-  // Get fresh data from UseCase
-  final result = await getAllTransactionsUseCase(NoParams());
-
-  result.fold(
-    (failure) => emit(TransactionError(...)),
-    (transactions) {
-      emit(TransactionLoaded(
-        transactions: transactions,  // Bao gồm transaction vừa thêm
-        categories: [...],
-        currentFilter: TransactionFilter.all,
-      ));
-    },
-  );
-}
-```
-
-#### **Bước 9: UI cập nhật**
-
-```dart
-// AddEditTransactionPage
-BlocListener<TransactionBloc, TransactionState>(
-  listener: (context, state) {
-    if (state is TransactionActionSuccess) {
-      // Show snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message)),
-      );
-
-      // Pop về TransactionListPage
-      Navigator.of(context).pop();
-    }
-
-    if (state is TransactionError) {
-      // Show error dialog
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: Text('Lỗi'),
-          content: Text(state.message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Đóng'),
-            ),
-          ],
-        ),
-      );
-    }
-  },
-  child: ...,
-)
-
-// TransactionListPage
-BlocBuilder<TransactionBloc, TransactionState>(
-  builder: (context, state) {
-    if (state is TransactionLoaded) {
-      // List được rebuild với data mới
-      return ListView.builder(
-        itemCount: state.transactions.length,
-        itemBuilder: (context, index) {
-          final transaction = state.transactions[index];
-          // Hiển thị transaction "Mua cà phê - 25.000đ"
-          return TransactionListItem(transaction: transaction);
-        },
-      );
-    }
-  },
-)
+Transaction inject CategoryManagementRepository
+Transaction gọi getAllCategories() để lấy dropdown data
+Transaction không trực tiếp modify categories
 ```
 
 ---
 
-### 🔄 Complete Flow Summary
+## 🎨 UI/UX Flow
+
+### Happy Path - Thêm Transaction
 
 ```
-User Input
-   ↓
-Form Validation
-   ↓
-Create TransactionEntity
-   ↓
-Dispatch AddTransaction Event
-   ↓
-TransactionBloc
-   ↓ emit TransactionActionInProgress
-   ↓ call AddTransactionUseCase
-AddTransactionUseCase
-   ↓ call repository.addTransaction()
-TransactionRepositoryImpl
-   ↓ convert Entity → Model
-   ↓ call localDataSource.addTransaction()
-DashboardLocalDataSourceImpl
-   ↓ _transactionBox.put(id, model)
-Hive Database
-   ↓ saved successfully
-Return Right(null)
-   ↓
-TransactionRepositoryImpl
-   ↓ return Right(null)
-AddTransactionUseCase
-   ↓ return Right(null)
-TransactionBloc
-   ↓ emit TransactionActionSuccess
-   ↓ dispatch LoadTransactions
-   ↓ emit TransactionLoaded (with new data)
-UI Updates
-   ↓ Show snackbar
-   ↓ Pop to ListPage
-   ↓ Rebuild list with new transaction
-Done ✅
+1. User mở app → Dashboard hiển thị
+2. User tap "Giao dịch" tab → TransactionListPage
+3. User tap FAB "+" → AddEditTransactionPage
+4. User nhập số tiền: 50000
+5. User chọn Type: Expense
+6. User chọn Category: "Ăn uống" (icon utensils, màu cam)
+7. Date tự động = hôm nay
+8. User nhập Note: "Cơm trưa"
+9. Preview card hiển thị:
+   - 🍴 Ăn uống
+   - -50,000 đ (màu đỏ)
+   - Cơm trưa
+   - Hôm nay 12:30
+10. User tap "Lưu"
+11. Loading indicator hiển thị
+12. Success! SnackBar: "Thêm giao dịch thành công"
+13. Back to TransactionListPage
+14. Transaction mới xuất hiện ở top của "Hôm nay"
+15. Danh sách tự động refresh
+16. Dashboard tự động cập nhật (nếu đang mở)
 ```
 
----
+### Error Handling
 
-## 8. Sơ Đồ Quan Hệ
-
-### 🏗 Class Diagram
+**Validation Error:**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      PRESENTATION LAYER                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────────────┐       ┌──────────────────────┐        │
-│  │ TransactionListPage  │─uses─▶│  TransactionBloc     │        │
-│  └──────────────────────┘       └────────┬─────────────┘        │
-│                                           │                      │
-│  ┌──────────────────────┐                │                      │
-│  │AddEditTransactionPage│─uses──────────▶│                      │
-│  └──────────────────────┘                │                      │
-│                                           │ handles              │
-│                                           ▼                      │
-│  ┌────────────────────────────────────────────────────┐         │
-│  │           TransactionEvent (Abstract)              │         │
-│  ├────────────────────────────────────────────────────┤         │
-│  │ - LoadTransactions                                 │         │
-│  │ - ChangeTransactionFilter                          │         │
-│  │ - AddTransaction(transaction)                      │         │
-│  │ - UpdateTransaction(transaction)                   │         │
-│  │ - DeleteTransaction(id)                            │         │
-│  │ - RefreshTransactions                              │         │
-│  └────────────────────────────────────────────────────┘         │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────┐         │
-│  │           TransactionState (Abstract)              │         │
-│  ├────────────────────────────────────────────────────┤         │
-│  │ - TransactionInitial                               │         │
-│  │ - TransactionLoading                               │         │
-│  │ - TransactionLoaded(transactions, categories)      │         │
-│  │ - TransactionActionInProgress                      │         │
-│  │ - TransactionActionSuccess(message)                │         │
-│  │ - TransactionError(message)                        │         │
-│  └────────────────────────────────────────────────────┘         │
-│                                                                  │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │ uses
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                         DOMAIN LAYER                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────────────────────────────────────────┐            │
-│  │              TransactionBloc                    │            │
-│  │  ┌───────────────────────────────────────────┐  │            │
-│  │  │ - getAllTransactionsUseCase               │  │            │
-│  │  │ - getAllCategoriesUseCase                 │  │            │
-│  │  │ - addTransactionUseCase                   │──┼───uses────┐│
-│  │  │ - updateTransactionUseCase                │  │           ││
-│  │  │ - deleteTransactionUseCase                │  │           ││
-│  │  └───────────────────────────────────────────┘  │           ││
-│  └─────────────────────────────────────────────────┘           ││
-│                                                                 ││
-│  ┌────────────────────────────────────────────────────────┐    ││
-│  │                     UseCases                           │    ││
-│  ├────────────────────────────────────────────────────────┤    ││
-│  │                                                        │◀───┘│
-│  │  GetAllTransactionsUseCase                            │     │
-│  │    ↳ call(NoParams)                                   │     │
-│  │    ↳ return Either<Failure, List<TransactionEntity>>  │     │
-│  │                                                        │     │
-│  │  AddTransactionUseCase                                │     │
-│  │    ↳ call(AddTransactionParams)                       │     │
-│  │    ↳ return Either<Failure, void>                     │     │
-│  │                                                        │     │
-│  │  UpdateTransactionUseCase                             │     │
-│  │    ↳ call(UpdateTransactionParams)                    │     │
-│  │    ↳ return Either<Failure, void>                     │     │
-│  │                                                        │     │
-│  │  DeleteTransactionUseCase                             │     │
-│  │    ↳ call(DeleteTransactionParams)                    │     │
-│  │    ↳ return Either<Failure, void>                     │     │
-│  │                                                        │     │
-│  │  GetAllCategoriesUseCase                              │     │
-│  │    ↳ call(NoParams)                                   │     │
-│  │    ↳ return Either<Failure, List<CategoryEntity>>     │     │
-│  └───────────────────────┬────────────────────────────────┘     │
-│                          │ uses                                 │
-│                          ▼                                      │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │      TransactionRepository (Interface)                 │    │
-│  ├────────────────────────────────────────────────────────┤    │
-│  │  getAllTransactions()                                  │    │
-│  │  addTransaction(entity)                                │    │
-│  │  updateTransaction(entity)                             │    │
-│  │  deleteTransaction(id)                                 │    │
-│  │  getAllCategories()                                    │    │
-│  └────────────────────────────────────────────────────────┘    │
-│                                                                  │
-│  ┌──────────────────┐   ┌──────────────────┐                   │
-│  │TransactionEntity │   │  CategoryEntity  │                   │
-│  └──────────────────┘   └──────────────────┘                   │
-│                                                                  │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │ implemented by
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                          DATA LAYER                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │       TransactionRepositoryImpl                        │     │
-│  │         (implements TransactionRepository)             │     │
-│  ├────────────────────────────────────────────────────────┤     │
-│  │  final DashboardLocalDataSource localDataSource       │     │
-│  │                                                        │     │
-│  │  getAllTransactions() {                               │     │
-│  │    1. Call localDataSource.getAllTransactions()       │     │
-│  │    2. Convert List<Model> → List<Entity>             │     │
-│  │    3. Sort by date descending                         │     │
-│  │    4. Return Right(entities)                          │     │
-│  │  }                                                     │     │
-│  │                                                        │     │
-│  │  addTransaction(entity) {                             │     │
-│  │    1. Convert Entity → Model                          │     │
-│  │    2. Call localDataSource.addTransaction(model)      │     │
-│  │    3. Return Right(null)                              │     │
-│  │  }                                                     │     │
-│  └───────────────────────┬────────────────────────────────┘     │
-│                          │ uses                                 │
-│                          ▼                                      │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │     DashboardLocalDataSource (Reused)                  │    │
-│  ├────────────────────────────────────────────────────────┤    │
-│  │  Box<TransactionModel> _transactionBox                 │    │
-│  │  Box<CategoryModel> _categoryBox                       │    │
-│  │                                                        │    │
-│  │  getAllTransactions() → List<TransactionModel>         │    │
-│  │  addTransaction(model) → void                          │    │
-│  │  updateTransaction(model) → void                       │    │
-│  │  deleteTransaction(id) → void                          │    │
-│  │  getAllCategories() → List<CategoryModel>              │    │
-│  └───────────────────────┬────────────────────────────────┘    │
-│                          │ uses                                 │
-│                          ▼                                      │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │                  Hive Database                         │    │
-│  │  Box<TransactionModel> transactions                    │    │
-│  │  Box<CategoryModel> categories                         │    │
-│  └────────────────────────────────────────────────────────┘    │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+User nhập amount = 0
+→ TextField hiển thị error: "Số tiền phải lớn hơn 0"
+→ Button "Lưu" disabled
+
+User không chọn category
+→ Dropdown hiển thị error: "Vui lòng chọn danh mục"
+→ Button "Lưu" disabled
 ```
 
-### 🔄 Sequence Diagram: Add Transaction Flow
+**Database Error:**
 
 ```
-User     AddEditPage   TransactionBloc   UseCase      Repository    DataSource    Hive
- │            │               │              │             │             │          │
- │─Fill form─▶│               │              │             │             │          │
- │─Tap Save──▶│               │              │             │             │          │
- │            │──AddTransaction event──────▶│              │             │          │
- │            │               │──TransactionActionInProgress────────────▶│          │
- │            │               │              │             │             │          │
- │            │               │──call()─────▶│             │             │          │
- │            │               │              │──addTransaction(entity)──▶│          │
- │            │               │              │             │             │          │
- │            │               │              │             │ Convert    │          │
- │            │               │              │             │ Entity→Model          │
- │            │               │              │             │             │          │
- │            │               │              │             │──addTransaction(model)─▶│
- │            │               │              │             │             │──put()──▶│
- │            │               │              │             │             │◀─saved──│
- │            │               │              │             │◀────────────│          │
- │            │               │              │◀────Right(null)──────────│          │
- │            │               │◀─Right(null)─│             │             │          │
- │            │               │              │             │             │          │
- │            │               │──TransactionActionSuccess────────────────▶│          │
- │            │◀──Success─────│              │             │             │          │
- │◀─Snackbar──│               │              │             │             │          │
- │◀─Pop page──│               │              │             │             │          │
- │            │               │              │             │             │          │
- │            │               │──LoadTransactions event───▶│             │          │
- │            │               │──TransactionLoading─────────────────────▶│          │
- │            │               │              │             │             │          │
- │            │               │──call()─────▶│             │             │          │
- │            │               │              │──getAllTransactions()───▶│          │
- │            │               │              │             │──getAllTransactions()─▶│
- │            │               │              │             │             │──query()─▶│
- │            │               │              │             │             │◀─models─│
- │            │               │              │             │◀────models──│          │
- │            │               │              │             │             │          │
- │            │               │              │             │ Convert     │          │
- │            │               │              │             │ Models→Entities        │
- │            │               │              │             │ Sort by date           │
- │            │               │              │             │             │          │
- │            │               │              │◀─Right(entities)─────────│          │
- │            │               │◀─Right(entities)─           │             │          │
- │            │               │              │             │             │          │
- │            │               │──TransactionLoaded(new data)─────────────▶│          │
-List Page  │◀──UI rebuilt───│              │             │             │          │
- │◀─Show new transaction────────────────────│             │             │          │
+Hive box không mở được
+→ Error dialog: "Không thể kết nối cơ sở dữ liệu"
+→ Button "Thử lại"
+→ User tap "Thử lại" → Retry init database
 ```
 
 ---
 
-## 📚 Tổng Kết
+## 📊 Performance Considerations
 
-### ✅ Key Takeaways
+**Lazy Loading:**
 
-#### 1. **Clean Separation**
+- Không implement trong version hiện tại
+- Load tất cả transactions vào memory
+- Hive đủ nhanh cho <10,000 transactions
 
-- UI chỉ biết về Bloc và Entities
-- Bloc chỉ biết về UseCases
-- UseCases chỉ biết về Repository Interface
-- Repository Implementation biết về DataSource
+**Pagination:**
 
-#### 2. **CRUD Pattern Consistency**
+- Để dành cho tương lai nếu data lớn
+- Hiện tại: Load all, group in memory
 
-Mỗi operation (Create/Read/Update/Delete) đều follow cùng một pattern:
+**Caching:**
 
-```
-Event → Bloc → UseCase → Repository → DataSource → Hive
-Hive → DataSource → Repository → UseCase → Bloc → State → UI
-```
-
-#### 3. **Error Handling với Either**
-
-```dart
-result.fold(
-  (failure) => handleError(),
-  (success) => handleSuccess(),
-);
-```
-
-#### 4. **State Management Strategy**
-
-- Loading state trước khi call async
-- Action in progress cho CRUD operations
-- Success/Error states với messages
-- Restore previous state nếu error
-
-#### 5. **Reusability**
-
-- DataSource được share giữa Dashboard và Transaction
-- Models/Entities được reuse
-- UseCases có thể được gọi từ nhiều nơi
+- BLoC giữ state trong memory
+- Không cần reload khi back từ detail page
+- Chỉ reload khi có thay đổi (add/update/delete)
 
 ---
 
-### 🔧 Best Practices
+## ✅ Checklist Implementation
 
-#### 1. **Validation Layers**
-
-```
-UI Validation (Form validators)
-    ↓
-Business Validation (UseCase)
-    ↓
-Data Validation (Repository/DataSource)
-```
-
-#### 2. **Loading States**
-
-```dart
-// Show loading before async operation
-emit(TransactionActionInProgress());
-
-// Call async operation
-await useCase();
-
-// Show result
-emit(TransactionActionSuccess());
-```
-
-#### 3. **Error Recovery**
-
-```dart
-// Save previous state
-final previousState = state;
-
-// Try operation
-final result = await operation();
-
-// Restore on error
-if (result.isLeft()) {
-  emit(previousState);
-}
-```
-
-#### 4. **Reload After Mutation**
-
-```dart
-// After add/update/delete
-emit(TransactionActionSuccess(message: 'Success'));
-
-// Reload to get fresh data
-add(LoadTransactions());
-```
+- [x] TransactionEntity với đầy đủ properties
+- [x] TransactionModel với Hive annotations
+- [x] TransactionLocalDataSource interface
+- [x] TransactionLocalDataSourceImpl với Hive
+- [x] TransactionRepository interface
+- [x] TransactionRepositoryImpl
+- [x] Tất cả UseCases (Get, Add, Update, Delete)
+- [x] TransactionBloc với Events và States
+- [x] TransactionListPage UI
+- [x] AddEditTransactionPage UI
+- [x] Dependency injection setup
+- [x] Filter by date range logic
+- [x] Integration với CategoryManagementRepository
+- [x] Error handling với Either pattern
+- [x] Validation logic
 
 ---
 
-### 🐛 Common Issues & Solutions
+## 🔮 Future Enhancements
 
-#### Issue 1: UI không update sau khi add/delete
+**Version 2.0:**
 
-**Solution**: Dispatch `LoadTransactions` event sau action success
+- Recurring transactions (giao dịch định kỳ)
+- Attachments (ảnh hóa đơn)
+- Location tracking
+- Templates (mẫu giao dịch nhanh)
+- Bulk operations (xóa nhiều)
 
-#### Issue 2: Category không hiển thị đúng
+**Version 3.0:**
 
-**Solution**: Load categories cùng lúc với transactions trong `LoadTransactions`
-
-#### Issue 3: Format số tiền bị lỗi
-
-**Solution**: Dùng `CurrencyInputFormatter` và parse đúng cách
-
-#### Issue 4: State bị mất khi error
-
-**Solution**: Save previous state trước khi emit loading/action states
-
----
-
-### 📖 Tài Liệu Liên Quan
-
-- [Dashboard Feature Guide](./DASHBOARD_FEATURE_TECHNICAL_GUIDE.md)
-- [Category Feature Guide](./CATEGORY_FEATURE_GUIDE.md)
-- [Statistics Feature Guide](./STATISTICS_FEATURE_GUIDE.md)
-
----
-
-**Tài liệu được tạo cho**: MONI - Save & Grow  
-**Feature**: Transaction Management (CRUD)  
-**Version**: 1.0.0  
-**Ngày cập nhật**: October 31, 2025  
-**Tác giả**: Thân Thân
+- Cloud sync
+- Multi-currency support
+- Budget tracking
+- AI-powered categorization
+- Export to Excel/PDF
