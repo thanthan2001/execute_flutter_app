@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/currency_input_formatter.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/budget_entity.dart';
 import '../bloc/budget_bloc.dart';
 import '../bloc/budget_event.dart';

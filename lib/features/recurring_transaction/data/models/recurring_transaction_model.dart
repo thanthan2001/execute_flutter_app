@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import '../../../../features/dashboard/domain/entities/category_entity.dart';
+import '../../../../features/category/domain/entities/category_entity.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
 
 part 'recurring_transaction_model.g.dart';

@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
-import '../../../dashboard/data/models/transaction_model.dart';
+import '../../../transaction/data/models/transaction_model.dart';
 import '../../domain/usecases/generate_pending_transactions_usecase.dart';
 
 /// Service xử lý background tasks cho recurring transactions

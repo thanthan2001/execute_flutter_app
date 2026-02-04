@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
 
 /// Entity đại diện cho giao dịch định kỳ (lặp lại)
 class RecurringTransactionEntity extends Equatable {

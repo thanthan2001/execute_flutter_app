@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../../dashboard/domain/entities/transaction_entity.dart';
+import '../../../transaction/domain/entities/transaction_entity.dart';
 import '../entities/recurring_transaction_entity.dart';
 import '../repositories/recurring_transaction_repository.dart';
 import 'package:uuid/uuid.dart';

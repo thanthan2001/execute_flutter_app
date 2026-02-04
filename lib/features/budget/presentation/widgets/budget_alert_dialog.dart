@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../dashboard/domain/entities/category_entity.dart';
+import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/budget_status.dart';
 
 /// Dialog cảnh báo khi budget có vấn đề
