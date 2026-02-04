@@ -32,14 +32,14 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF9598B0), // Primary color
-              const Color(0xFF7B7E94), // Darker shade
-              const Color(0xFF5E6175), // Even darker
+              Color(0xFF9598B0), // Primary color
+              Color(0xFF7B7E94), // Darker shade
+              Color(0xFF5E6175), // Even darker
             ],
           ),
         ),

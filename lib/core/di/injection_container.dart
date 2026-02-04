@@ -40,7 +40,24 @@ import 'package:my_clean_app/features/statistics/domain/usecases/get_statistics_
 import 'package:my_clean_app/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:my_clean_app/features/settings/domain/usecases/clear_all_transactions_usecase.dart';
 import 'package:my_clean_app/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:my_clean_app/features/budget/data/models/budget_model.dart';
+import 'package:my_clean_app/features/budget/data/repositories/budget_repository_impl.dart';
+import 'package:my_clean_app/features/budget/domain/repositories/budget_repository.dart';
+import 'package:my_clean_app/features/budget/domain/usecases/check_budget_status_usecase.dart';
+import 'package:my_clean_app/features/budget/domain/usecases/delete_budget_usecase.dart';
+import 'package:my_clean_app/features/budget/domain/usecases/get_budgets_usecase.dart';
+import 'package:my_clean_app/features/budget/domain/usecases/set_budget_usecase.dart';
+import 'package:my_clean_app/features/budget/presentation/bloc/budget_bloc.dart';
+import 'package:my_clean_app/features/recurring_transaction/data/models/recurring_transaction_model.dart';
+import 'package:my_clean_app/features/recurring_transaction/data/repositories/recurring_transaction_repository_impl.dart';
+import 'package:my_clean_app/features/recurring_transaction/data/services/recurring_transaction_service.dart';
+import 'package:my_clean_app/features/recurring_transaction/domain/repositories/recurring_transaction_repository.dart';
+import 'package:my_clean_app/features/recurring_transaction/domain/usecases/create_update_recurring_usecase.dart';
+import 'package:my_clean_app/features/recurring_transaction/domain/usecases/generate_pending_transactions_usecase.dart';
+import 'package:my_clean_app/features/recurring_transaction/domain/usecases/get_recurring_usecases.dart';
+import 'package:my_clean_app/features/recurring_transaction/presentation/bloc/recurring_transaction_bloc.dart';
 import '../configs/app_env.dart';
+// import '../error/failures.dart';
 import '../network/network_info.dart';
 
 // Service Locator
@@ -61,6 +78,12 @@ Future<void> init() async {
   }
   if (!Hive.isAdapterRegistered(1)) {
     Hive.registerAdapter(CategoryModelAdapter());
+  }
+  if (!Hive.isAdapterRegistered(2)) {
+    Hive.registerAdapter(BudgetModelAdapter());
+  }
+  if (!Hive.isAdapterRegistered(3)) {
+    Hive.registerAdapter(RecurringTransactionModelAdapter());
   }
 
   // ## Data Sources - Initialize first
@@ -182,6 +205,64 @@ Future<void> init() async {
 
   // Use cases
   sl.registerLazySingleton(() => ClearAllTransactionsUseCase(sl()));
+
+  // ## Features - Budget
+  // Bloc
+  sl.registerFactory(() => BudgetBloc(
+        getBudgetsUseCase: sl(),
+        getActiveBudgetsUseCase: sl(),
+        setBudgetUseCase: sl(),
+        deleteBudgetUseCase: sl(),
+        getAllBudgetStatusesUseCase: sl(),
+      ));
+
+  // Use cases
+  sl.registerLazySingleton(() => GetBudgetsUseCase(sl()));
+  sl.registerLazySingleton(() => GetActiveBudgetsUseCase(sl()));
+  sl.registerLazySingleton(() => SetBudgetUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteBudgetUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllBudgetStatusesUseCase(sl()));
+
+  // Repository - Tái sử dụng DashboardLocalDataSource
+  sl.registerLazySingleton<BudgetRepository>(
+    () => BudgetRepositoryImpl(
+      localDataSource: sl(),
+    ),
+  );
+
+  // ## Features - RecurringTransaction
+  // Bloc
+  sl.registerFactory(() => RecurringTransactionBloc(
+        getAllRecurringTransactionsUseCase: sl(),
+        getActiveRecurringTransactionsUseCase: sl(),
+        createRecurringTransactionUseCase: sl(),
+        updateRecurringTransactionUseCase: sl(),
+        activateRecurringUseCase: sl(),
+        deactivateRecurringUseCase: sl(),
+        deleteRecurringUseCase: sl(),
+        recurringTransactionService: sl(),
+      ));
+
+  // Use cases
+  sl.registerLazySingleton(() => GetAllRecurringTransactionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetActiveRecurringTransactionsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateRecurringTransactionUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateRecurringTransactionUseCase(sl()));
+  sl.registerLazySingleton(() => ActivateRecurringUseCase(sl()));
+  sl.registerLazySingleton(() => DeactivateRecurringUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteRecurringUseCase(sl()));
+  sl.registerLazySingleton(() => GeneratePendingTransactionsUseCase(sl()));
+
+  // Service
+  sl.registerLazySingleton(() => RecurringTransactionService(
+        generatePendingTransactionsUseCase: sl(),
+        dashboardLocalDataSource: sl(),
+      ));
+
+  // Repository
+  sl.registerLazySingleton<RecurringTransactionRepository>(
+    () => RecurringTransactionRepositoryImpl(),
+  );
 
   // ## Features - Auth
   // Bloc

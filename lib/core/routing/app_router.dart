@@ -11,6 +11,8 @@ import '../../features/category/presentation/pages/add_edit_category_page.dart';
 import '../../features/category/domain/entities/category_entity.dart';
 import '../../features/statistics/presentation/pages/statistics_screen.dart';
 import '../../features/settings/presentation/pages/settings_screen.dart';
+import '../../features/budget/presentation/pages/budget_management_page.dart';
+import '../../features/recurring_transaction/presentation/pages/recurring_transaction_list_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -69,6 +71,14 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/budgets',
+        builder: (context, state) => const BudgetManagementPage(),
+      ),
+      GoRoute(
+        path: '/recurring',
+        builder: (context, state) => const RecurringTransactionListPage(),
       ),
     ],
   );
