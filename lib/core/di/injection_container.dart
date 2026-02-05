@@ -14,6 +14,7 @@ import 'package:my_clean_app/features/category/data/datasources/category_local_d
 import 'package:my_clean_app/features/category/data/datasources/category_local_data_source_impl.dart';
 import 'package:my_clean_app/features/transaction/data/datasources/transaction_local_data_source.dart';
 import 'package:my_clean_app/features/transaction/data/datasources/transaction_local_data_source_impl.dart';
+import 'package:my_clean_app/features/dashboard/data/datasources/dashboard_local_data_source.dart';
 import 'package:my_clean_app/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:my_clean_app/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:my_clean_app/features/dashboard/domain/usecases/get_dashboard_summary_usecase.dart';
@@ -56,6 +57,16 @@ import 'package:my_clean_app/features/recurring_transaction/domain/usecases/crea
 import 'package:my_clean_app/features/recurring_transaction/domain/usecases/generate_pending_transactions_usecase.dart';
 import 'package:my_clean_app/features/recurring_transaction/domain/usecases/get_recurring_usecases.dart';
 import 'package:my_clean_app/features/recurring_transaction/presentation/bloc/recurring_transaction_bloc.dart';
+import 'package:my_clean_app/features/backup/data/repositories/backup_repository_impl.dart';
+import 'package:my_clean_app/features/backup/data/repositories/google_drive_backup_repository_impl.dart';
+import 'package:my_clean_app/features/backup/data/datasources/google_drive/google_drive_data_source.dart';
+import 'package:my_clean_app/features/backup/domain/repositories/backup_repository.dart';
+import 'package:my_clean_app/features/backup/domain/repositories/cloud_backup_repository.dart';
+import 'package:my_clean_app/features/backup/domain/usecases/export_data_usecase.dart';
+import 'package:my_clean_app/features/backup/domain/usecases/import_data_usecase.dart';
+import 'package:my_clean_app/features/backup/domain/usecases/restore_data_usecase.dart';
+import 'package:my_clean_app/features/backup/domain/usecases/validate_backup_file_usecase.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../configs/app_env.dart';
 // import '../error/failures.dart';
 import '../network/network_info.dart';
@@ -95,6 +106,10 @@ Future<void> init() async {
   final transactionLocalDataSource = TransactionLocalDataSourceImpl();
   await transactionLocalDataSource.init();
 
+  // Dashboard Data Source
+  final dashboardLocalDataSource = DashboardLocalDataSourceImpl();
+  await dashboardLocalDataSource.init();
+
   // Khởi tạo categories mặc định nếu chưa có
   final categories = await categoryLocalDataSource.getAllCategories();
   print('📊 Current categories count: ${categories.length}');
@@ -115,6 +130,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<TransactionLocalDataSource>(
     () => transactionLocalDataSource,
+  );
+
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () => dashboardLocalDataSource,
   );
 
   // ## Features - Dashboard
@@ -262,6 +281,34 @@ Future<void> init() async {
   // Repository
   sl.registerLazySingleton<RecurringTransactionRepository>(
     () => RecurringTransactionRepositoryImpl(),
+  );
+
+  // ## Features - Backup
+  sl.registerLazySingleton<BackupRepository>(
+    () => BackupRepositoryImpl(),
+  );
+  sl.registerLazySingleton(() => ExportDataUseCase(sl()));
+  sl.registerLazySingleton(
+      () => ValidateBackupFileUseCase(repository: sl()));
+  sl.registerLazySingleton(() => RestoreDataUseCase(sl()));
+  sl.registerLazySingleton(
+    () => ImportDataUseCase(
+      validateBackupFileUseCase: sl(),
+      restoreDataUseCase: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<CloudBackupRepository>(
+    () => GoogleDriveBackupRepositoryImpl(dataSource: sl()),
+  );
+  sl.registerLazySingleton(
+    () => GoogleDriveDataSource(googleSignIn: sl()),
+  );
+  sl.registerLazySingleton(
+    () => GoogleSignIn(
+      clientId: '157701303044-ikf42ne700jmff720po9a9bfgogdl8gr.apps.googleusercontent.com',
+      scopes: ['https://www.googleapis.com/auth/drive.file'],
+    ),
   );
 
   // ## Features - Auth

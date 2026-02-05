@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../global/widgets/widgets.dart';
 
 /// Widget hiển thị Pie Chart theo nhóm (có thể dùng cho cả chi tiêu và thu nhập)
 class CategoryPieChart extends StatelessWidget {
@@ -20,10 +21,7 @@ class CategoryPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (dataByCategory.isEmpty) {
       return Center(
-        child: Text(
-          emptyMessage,
-          style: const TextStyle(fontSize: 14, color: Colors.grey),
-        ),
+        child: AppText.bodySmall(emptyMessage, color: Colors.grey),
       );
     }
 

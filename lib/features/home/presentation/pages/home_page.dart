@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_clean_app/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:my_clean_app/global/widgets/base_scaffold.dart'; // Import BaseScaffold
+import 'package:my_clean_app/global/widgets/widgets.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -24,9 +24,9 @@ class HomePage extends StatelessWidget {
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthAuthenticated) {
-              return Text('Welcome, ${state.user.name}!');
+              return AppText.body('Welcome, ${state.user.name}!');
             }
-            return const Text('Welcome!');
+            return AppText.body('Welcome!');
           },
         ),
       ),

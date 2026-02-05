@@ -47,7 +47,7 @@ class CategoryManagementRepositoryImpl implements CategoryManagementRepository {
       final model = models.firstWhere((m) => m.id == id);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(CacheFailure(message: 'Category not found'));
+      return const Left(CacheFailure(message: 'Category not found'));
     }
   }
 

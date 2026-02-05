@@ -13,6 +13,7 @@ import '../../features/statistics/presentation/pages/statistics_screen.dart';
 import '../../features/settings/presentation/pages/settings_screen.dart';
 import '../../features/budget/presentation/pages/budget_management_page.dart';
 import '../../features/recurring_transaction/presentation/pages/recurring_transaction_list_page.dart';
+import '../../features/backup/presentation/pages/backup_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -73,12 +74,24 @@ class AppRouter {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
+        path: '/budget',
+        builder: (context, state) => const BudgetManagementPage(),
+      ),
+      GoRoute(
         path: '/budgets',
         builder: (context, state) => const BudgetManagementPage(),
       ),
       GoRoute(
+        path: '/recurring-transactions',
+        builder: (context, state) => const RecurringTransactionListPage(),
+      ),
+      GoRoute(
         path: '/recurring',
         builder: (context, state) => const RecurringTransactionListPage(),
+      ),
+      GoRoute(
+        path: '/backup',
+        builder: (context, state) => const BackupScreen(),
       ),
     ],
   );

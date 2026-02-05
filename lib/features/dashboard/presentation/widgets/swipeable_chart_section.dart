@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import 'category_pie_chart.dart';
 
@@ -47,45 +48,33 @@ class _SwipeableChartSectionState extends State<SwipeableChartSection> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
+    return AppCard.padded(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header với title động
-            Row(
-              children: [
-                Icon(
-                  Icons.pie_chart,
-                  color: _currentPage == 0 ? AppColors.red : AppColors.green,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header với title động
+          Row(
+            children: [
+              Icon(
+                Icons.pie_chart,
+                color: _currentPage == 0 ? AppColors.red : AppColors.green,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AppText.heading4(
+                  _currentPage == 0
+                      ? 'Chi tiêu theo nhóm'
+                      : 'Thu nhập theo nhóm',
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _currentPage == 0
-                        ? 'Chi tiêu theo nhóm'
-                        : 'Thu nhập theo nhóm',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${_currentPage + 1}/2',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+              ),
+              AppText.caption(
+                '${_currentPage + 1}/2',
+                color: Colors.grey[600],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
 
             // PageView với 2 biểu đồ
             SizedBox(
@@ -115,35 +104,34 @@ class _SwipeableChartSectionState extends State<SwipeableChartSection> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Page indicator (chấm)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(2, (index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? theme.primaryColor
-                        : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
+          // Page indicator (chấm)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(2, (index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _currentPage == index ? 24 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? theme.primaryColor
+                      : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
 
-            // Legend hiển thị dữ liệu của trang hiện tại
-            _buildLegend(
-              _currentPage == 0
-                  ? widget.expenseByCategory
-                  : widget.incomeByCategory,
-            ),
-          ],
-        ),
+          // Legend hiển thị dữ liệu của trang hiện tại
+          _buildLegend(
+            _currentPage == 0
+                ? widget.expenseByCategory
+                : widget.incomeByCategory,
+          ),
+        ],
       ),
     );
   }
@@ -183,9 +171,8 @@ class _SwipeableChartSectionState extends State<SwipeableChartSection> {
               ),
             ),
             const SizedBox(width: 4),
-            Text(
+            AppText.caption(
               '${category?.name ?? categoryId}: $formattedAmount',
-              style: const TextStyle(fontSize: 12),
             ),
           ],
         );

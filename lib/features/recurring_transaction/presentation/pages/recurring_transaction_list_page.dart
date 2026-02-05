@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
@@ -68,7 +69,7 @@ class _RecurringTransactionListViewState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Giao Dịch Định Kỳ'),
+        title: AppText.heading4('Giao Dịch Định Kỳ'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -90,26 +91,15 @@ class _RecurringTransactionListViewState
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                TextField(
+                AppSearchInput(
                   controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Tìm kiếm giao dịch định kỳ...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+                  hintText: 'Tìm kiếm giao dịch định kỳ...',
                   onChanged: (value) {
                     setState(() => _searchQuery = value);
+                  },
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
                   },
                 ),
                 const SizedBox(height: 12),
@@ -119,7 +109,7 @@ class _RecurringTransactionListViewState
                   child: Row(
                     children: [
                       FilterChip(
-                        label: const Text('Tất cả'),
+                        label: AppText.bodySmall('Tất cả'),
                         selected: _selectedFilter == null,
                         onSelected: (selected) {
                           setState(() => _selectedFilter = null);
@@ -127,7 +117,7 @@ class _RecurringTransactionListViewState
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
-                        label: const Text('🔽 Thu'),
+                        label: AppText.bodySmall('🔽 Thu'),
                         selected: _selectedFilter == TransactionCategoryType.income,
                         onSelected: (selected) {
                           setState(() => _selectedFilter =
@@ -136,7 +126,7 @@ class _RecurringTransactionListViewState
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
-                        label: const Text('🔼 Chi'),
+                        label: AppText.bodySmall('🔼 Chi'),
                         selected: _selectedFilter == TransactionCategoryType.expense,
                         onSelected: (selected) {
                           setState(() => _selectedFilter =
@@ -153,28 +143,14 @@ class _RecurringTransactionListViewState
             child: BlocConsumer<RecurringTransactionBloc, RecurringTransactionState>(
               listener: (context, state) {
                 if (state is RecurringTransactionActionSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  AppSnackBar.showSuccess(context, state.message);
                 } else if (state is RecurringTransactionError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  AppSnackBar.showError(context, state.message);
                 } else if (state is RecurringTransactionProcessed) {
                   if (state.generatedCount > 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Đã tạo ${state.generatedCount} giao dịch từ lịch định kỳ',
-                        ),
-                        backgroundColor: Colors.blue,
-                      ),
+                    AppSnackBar.showInfo(
+                      context,
+                      'Đã tạo ${state.generatedCount} giao dịch từ lịch định kỳ',
                     );
                   }
                 }
@@ -191,15 +167,15 @@ class _RecurringTransactionListViewState
                       children: [
                         const Icon(Icons.error_outline, size: 64, color: Colors.red),
                         const SizedBox(height: 16),
-                        Text(state.message),
+                        AppText.body(state.message),
                         const SizedBox(height: 16),
-                        ElevatedButton(
+                        AppButton.primary(
+                          text: 'Thử lại',
                           onPressed: () {
                             context
                                 .read<RecurringTransactionBloc>()
                                 .add(const LoadRecurringTransactions());
                           },
-                          child: const Text('Thử lại'),
                         ),
                       ],
                     ),
@@ -246,15 +222,11 @@ class _RecurringTransactionListViewState
                         children: [
                           const Icon(Icons.repeat, size: 64, color: Colors.grey),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Chưa có giao dịch định kỳ nào',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
+                          AppText.body('Chưa có giao dịch định kỳ nào',
+                              color: Colors.grey),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Nhấn nút + để thêm mới',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
+                          AppText.bodySmall('Nhấn nút + để thêm mới',
+                              color: Colors.grey),
                         ],
                       ),
                     );
@@ -289,7 +261,7 @@ class _RecurringTransactionListViewState
                   );
                 }
 
-                return const Center(child: Text('Không có dữ liệu'));
+                return  Center(child: AppText.body('Không có dữ liệu'));
               },
             ),
           ),
@@ -325,9 +297,9 @@ class _RecurringTransactionListViewState
       decimalDigits: 0,
     );
 
-    return Card(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
+      child: AppListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -342,22 +314,15 @@ class _RecurringTransactionListViewState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    recurring.description,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  AppText.body(recurring.description),
                   const SizedBox(height: 4),
-                  Text(
+                  AppText.caption(
                     recurring.type == TransactionCategoryType.income
                         ? '🔽 Thu'
                         : '🔼 Chi',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: recurring.type == TransactionCategoryType.income
-                          ? Colors.green
-                          : Colors.red,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    color: recurring.type == TransactionCategoryType.income
+                        ? Colors.green
+                        : Colors.red,
                   ),
                 ],
               ),
@@ -367,10 +332,9 @@ class _RecurringTransactionListViewState
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(category.name),
-            Text(
+            AppText.bodySmall(category.name),
+            AppText.caption(
               '${recurring.frequency.displayName} • Kế tiếp: ${DateFormat('dd/MM/yyyy').format(recurring.nextDate)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -381,22 +345,16 @@ class _RecurringTransactionListViewState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  currencyFormat.format(recurring.amount),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                AppText.body(currencyFormat.format(recurring.amount)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: recurring.isActive ? Colors.green : Colors.grey,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
+                  child: AppText.overline(
                     recurring.isActive ? 'Active' : 'Paused',
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -420,11 +378,12 @@ class _RecurringTransactionListViewState
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'toggle',
-                  child: Text(recurring.isActive ? 'Tạm dừng' : 'Kích hoạt'),
+                  child: AppText.body(
+                      recurring.isActive ? 'Tạm dừng' : 'Kích hoạt'),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
-                  child: Text('Xóa', style: TextStyle(color: Colors.red)),
+                  child: AppText.body('Xóa', color: Colors.red),
                 ),
               ],
             ),
@@ -451,22 +410,13 @@ class _RecurringTransactionListViewState
     BuildContext context,
     RecurringTransactionEntity recurring,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa "${recurring.description}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa "${recurring.description}"?',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      isDanger: true,
     );
 
     if (confirmed == true && context.mounted) {

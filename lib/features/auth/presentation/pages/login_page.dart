@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_clean_app/global/widgets/base_scaffold.dart'; // Import BaseScaffold
+import 'package:my_clean_app/global/widgets/widgets.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatelessWidget {
@@ -20,40 +20,38 @@ class LoginPage extends StatelessWidget {
           if (state is AuthAuthenticated) {
             context.go('/home');
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
+            AppInput(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              labelText: 'Email',
+              prefixIcon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppPasswordInput(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              labelText: 'Password',
             ),
             const SizedBox(height: 32),
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
-                if (state is AuthLoading) {
-                  return const CircularProgressIndicator();
-                }
-                return ElevatedButton(
-                  onPressed: () {
+                final isLoading = state is AuthLoading;
+                return AppButton.primary(
+                  text: 'Login',
+                  isLoading: isLoading,
+                  width: double.infinity,
+                  onPressed: isLoading ? null : () {
                     final email = emailController.text;
                     final password = passwordController.text;
                     context.read<AuthBloc>().add(
                           LoginEvent(email: email, password: password),
                         );
                   },
-                  child: const Text('Login'),
                 );
               },
             ),

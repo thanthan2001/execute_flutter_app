@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../domain/entities/dashboard_summary.dart';
 
 /// Widget hiển thị Bar Chart theo tháng
@@ -16,11 +17,8 @@ class MonthlyBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (monthlyData.isEmpty) {
-      return const Center(
-        child: Text(
-          'Chưa có dữ liệu',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
+      return Center(
+        child: AppText.bodySmall('Chưa có dữ liệu', color: Colors.grey),
       );
     }
 
@@ -74,15 +72,13 @@ class MonthlyBarChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= monthlyData.length)
+                if (value.toInt() >= monthlyData.length) {
                   return const SizedBox();
+                }
                 final data = monthlyData[value.toInt()];
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'T${data.month}',
-                    style: const TextStyle(fontSize: 10),
-                  ),
+                  child: AppText.overline('T${data.month}'),
                 );
               },
             ),
@@ -92,10 +88,7 @@ class MonthlyBarChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 50,
               getTitlesWidget: (value, meta) {
-                return Text(
-                  _formatCompactCurrency(value),
-                  style: const TextStyle(fontSize: 10),
-                );
+                return AppText.overline(_formatCompactCurrency(value));
               },
             ),
           ),

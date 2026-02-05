@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/budget_status.dart';
@@ -56,7 +57,7 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản Lý Ngân Sách'),
+        title: AppText.heading4('Quản Lý Ngân Sách'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -69,21 +70,11 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
       body: BlocConsumer<BudgetBloc, BudgetState>(
         listener: (context, state) {
           if (state is BudgetActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
+            AppSnackBar.showSuccess(context, state.message);
             // Reload sau khi action success
             context.read<BudgetBloc>().add(const LoadBudgetStatuses());
           } else if (state is BudgetError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -98,13 +89,13 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
                 children: [
                   const Icon(Icons.error_outline, size: 64, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(state.message),
+                  AppText.body(state.message),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  AppButton.primary(
+                    text: 'Thử lại',
                     onPressed: () {
                       context.read<BudgetBloc>().add(const LoadBudgetStatuses());
                     },
-                    child: const Text('Thử lại'),
                   ),
                 ],
               ),
@@ -122,15 +113,10 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
                     const Icon(Icons.account_balance_wallet_outlined,
                         size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Chưa có ngân sách nào',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
+                    AppText.body('Chưa có ngân sách nào', color: Colors.grey),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Nhấn nút + để thêm ngân sách mới',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
+                    AppText.bodySmall('Nhấn nút + để thêm ngân sách mới',
+                        color: Colors.grey),
                   ],
                 ),
               );
@@ -167,27 +153,14 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
                       child: const Icon(Icons.delete, color: Colors.white),
                     ),
                     confirmDismiss: (direction) async {
-                      return await showDialog<bool>(
+                      return await AppDialog.showConfirm(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Xác nhận xóa'),
-                          content: Text(
+                        title: 'Xác nhận xóa',
+                        message:
                             'Bạn có chắc muốn xóa ngân sách cho "${category.name}"?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Hủy'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text(
-                                'Xóa',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
+                        confirmText: 'Xóa',
+                        cancelText: 'Hủy',
+                        isDanger: true,
                       );
                     },
                     onDismissed: (direction) {
@@ -195,7 +168,7 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
                             DeleteBudget(budgetId: status.budgetId),
                           );
                     },
-                    child: Card(
+                    child: AppCard(
                       margin: const EdgeInsets.only(bottom: 16),
                       child: InkWell(
                         onTap: () {
@@ -225,7 +198,7 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
             );
           }
 
-          return const Center(child: Text('Không có dữ liệu'));
+          return  Center(child: AppText.body('Không có dữ liệu'));
         },
       ),
       floatingActionButton: FloatingActionButton(

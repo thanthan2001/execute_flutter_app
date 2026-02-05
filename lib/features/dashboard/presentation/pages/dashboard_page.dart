@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../../category/domain/repositories/category_management_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
@@ -56,13 +57,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'MONI',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-          ),
-        ),
+        title: AppText.heading4('MONI'),
         elevation: 0,
         actions: [
           //Add transaction
@@ -85,6 +80,18 @@ class _DashboardPageState extends State<DashboardPage> {
                 case 'statistics':
                   await context.push('/statistics');
                   break;
+                case 'budget':
+                  await context.push('/budget');
+                  if (mounted) {
+                    context.read<DashboardBloc>().add(const RefreshDashboard());
+                  }
+                  break;
+                case 'recurring':
+                  await context.push('/recurring-transactions');
+                  if (mounted) {
+                    context.read<DashboardBloc>().add(const RefreshDashboard());
+                  }
+                  break;
                 case 'categories':
                   await context.push('/categories');
                   if (mounted) {
@@ -106,44 +113,64 @@ class _DashboardPageState extends State<DashboardPage> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'statistics',
                 child: Row(
                   children: [
                     Icon(Icons.bar_chart, size: 20),
                     SizedBox(width: 12),
-                    Text('Thống kê'),
+                    AppText.body('Thống kê'),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
+                value: 'budget',
+                child: Row(
+                  children: [
+                    Icon(Icons.account_balance_wallet_outlined, size: 20),
+                    SizedBox(width: 12),
+                    AppText.body('Quản lý ngân sách'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'recurring',
+                child: Row(
+                  children: [
+                    Icon(Icons.repeat, size: 20),
+                    SizedBox(width: 12),
+                    AppText.body('Giao dịch định kỳ'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
                 value: 'categories',
                 child: Row(
                   children: [
                     Icon(Icons.category_outlined, size: 20),
                     SizedBox(width: 12),
-                    Text('Quản lý nhóm'),
+                    AppText.body('Quản lý nhóm'),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'transactions',
                 child: Row(
                   children: [
                     Icon(Icons.list_alt, size: 20),
                     SizedBox(width: 12),
-                    Text('Danh sách giao dịch'),
+                    AppText.body('Danh sách giao dịch'),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'settings',
                 child: Row(
                   children: [
                     Icon(Icons.settings_outlined, size: 20),
                     SizedBox(width: 12),
-                    Text('Cài đặt'),
+                    AppText.body('Cài đặt'),
                   ],
                 ),
               ),
@@ -170,10 +197,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: AppColors.red,
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  AppText.body(state.message),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
@@ -182,7 +206,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           .add(const RefreshDashboard());
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Thử lại'),
+                    label: AppText.label('Thử lại'),
                   ),
                 ],
               ),
@@ -201,8 +225,8 @@ class _DashboardPageState extends State<DashboardPage> {
           }
 
           // Initial state
-          return const Center(
-            child: Text('Kéo xuống để tải dữ liệu'),
+          return  Center(
+            child: AppText.body('Kéo xuống để tải dữ liệu'),
           );
         },
       ),
@@ -268,46 +292,33 @@ class _DashboardPageState extends State<DashboardPage> {
         const SizedBox(height: 24),
 
         // Bar Chart Section
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.bar_chart, color: theme.primaryColor),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Biểu đồ theo tháng',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+        AppCard.padded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.bar_chart, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  AppText.heading4('Biểu đồ theo tháng'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildChartLegendItem('Thu', AppColors.green),
+                  const SizedBox(width: 16),
+                  _buildChartLegendItem('Chi', AppColors.red),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 250,
+                child: MonthlyBarChart(
+                  monthlyData: summary.monthlyData,
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _buildChartLegendItem('Thu', AppColors.green),
-                    const SizedBox(width: 16),
-                    _buildChartLegendItem('Chi', AppColors.red),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 250,
-                  child: MonthlyBarChart(
-                    monthlyData: summary.monthlyData,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -329,10 +340,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12),
-        ),
+        AppText.caption(label),
       ],
     );
   }

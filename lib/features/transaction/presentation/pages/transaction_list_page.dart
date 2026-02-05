@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../bloc/transaction_bloc.dart';
@@ -18,6 +19,9 @@ class TransactionListPage extends StatefulWidget {
 }
 
 class _TransactionListPageState extends State<TransactionListPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -26,34 +30,25 @@ class _TransactionListPageState extends State<TransactionListPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Giao dịch',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: AppText.heading4('Giao dịch'),
         elevation: 0,
       ),
       body: BlocConsumer<TransactionBloc, TransactionState>(
         listener: (context, state) {
           // Hiển thị thông báo khi có action success/error
           if (state is TransactionActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.green,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppSnackBar.showSuccess(context, state.message);
           } else if (state is TransactionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -69,16 +64,16 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   const Icon(Icons.error_outline,
                       size: 64, color: AppColors.red),
                   const SizedBox(height: 16),
-                  Text(state.message),
+                  AppText.body(state.message),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  AppButton.primary(
+                    text: 'Thử lại',
+                    icon: Icons.refresh,
                     onPressed: () {
                       context
                           .read<TransactionBloc>()
                           .add(const LoadTransactions());
                     },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Thử lại'),
                   ),
                 ],
               ),
@@ -89,7 +84,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             return _buildTransactionList(context, state);
           }
 
-          return const Center(child: Text('Kéo xuống để tải dữ liệu'));
+          return  Center(child: AppText.body('Kéo xuống để tải dữ liệu'));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -102,7 +97,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('Thêm giao dịch'),
+        label: AppText.label('Thêm giao dịch'),
       ),
     );
   }
@@ -112,18 +107,41 @@ class _TransactionListPageState extends State<TransactionListPage> {
     final transactions = state.transactions;
     final categories = state.categories;
 
+    final filteredTransactions = _searchQuery.isEmpty
+        ? transactions
+        : transactions.where((transaction) {
+            final description = transaction.description.toLowerCase();
+            return description.contains(_searchQuery.toLowerCase());
+          }).toList();
+
     // Tạo map để lookup category dễ hơn
     final categoryMap = {for (var cat in categories) cat.id: cat};
 
     return Column(
       children: [
+        // Search
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: AppSearchInput(
+            controller: _searchController,
+            hintText: 'Tìm kiếm theo tên giao dịch...',
+            onChanged: (value) {
+              setState(() => _searchQuery = value);
+            },
+            onClear: () {
+              _searchController.clear();
+              setState(() => _searchQuery = '');
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
         // Filter chips
         _buildFilterChips(context, state.currentFilter),
         const Divider(height: 1),
 
         // List transactions
         Expanded(
-          child: transactions.isEmpty
+          child: filteredTransactions.isEmpty
               ? _buildEmptyState()
               : RefreshIndicator(
                   onRefresh: () async {
@@ -134,9 +152,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   },
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: transactions.length,
+                    itemCount: filteredTransactions.length,
                     itemBuilder: (context, index) {
-                      final transaction = transactions[index];
+                      final transaction = filteredTransactions[index];
                       final category = categoryMap[transaction.categoryId];
                       return _buildTransactionItem(
                         context,
@@ -210,7 +228,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             color: isSelected ? Colors.white : chipColor,
           ),
           const SizedBox(width: 4),
-          Text(label),
+          AppText.bodySmall(label),
         ],
       ),
       selected: isSelected,
@@ -263,23 +281,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
-        return await showDialog(
+        return await AppDialog.showConfirm(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Xác nhận xóa'),
-            content: const Text('Bạn có chắc muốn xóa giao dịch này?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Hủy'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: AppColors.red),
-                child: const Text('Xóa'),
-              ),
-            ],
-          ),
+          title: 'Xác nhận xóa',
+          message: 'Bạn có chắc muốn xóa giao dịch này?',
+          confirmText: 'Xóa',
+          cancelText: 'Hủy',
+          isDanger: true,
         );
       },
       onDismissed: (direction) {
@@ -287,12 +295,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
               DeleteTransaction(id: transaction.id),
             );
       },
-      child: Card(
-        elevation: 1,
+      child: AppCard(
         margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
         child: InkWell(
           onTap: () async {
             // Navigate to edit transaction screen
@@ -330,43 +334,24 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        category?.name ?? 'Khác',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
+                      AppText.bodySmall(category?.name ?? 'Khác',
+                          color: Colors.grey),
                       const SizedBox(height: 4),
-                      Text(
+                      AppText.body(
                         transaction.description,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        formattedDate,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      AppText.caption(formattedDate),
                     ],
                   ),
                 ),
 
                 // Amount
-                Text(
+                AppText.body(
                   '$amountPrefix$formattedAmount',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: amountColor,
-                  ),
+                  color: amountColor,
                 ),
               ],
             ),
@@ -388,22 +373,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
             color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
-          Text(
-            'Chưa có giao dịch nào',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          AppText.heading4('Chưa có giao dịch nào', color: Colors.grey[600]),
           const SizedBox(height: 8),
-          Text(
-            'Nhấn nút + để thêm giao dịch mới',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
+          AppText.bodySmall('Nhấn nút + để thêm giao dịch mới',
+              color: Colors.grey[500]),
         ],
       ),
     );

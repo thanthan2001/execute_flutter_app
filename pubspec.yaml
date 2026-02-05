@@ -41,6 +41,14 @@ dependencies:
   # Icons
   font_awesome_flutter: ^10.7.0
 
+  # Backup & Cloud
+  path_provider: ^2.1.4
+  file_picker: ^5.5.0
+  google_sign_in: ^6.2.1
+  googleapis: ^13.2.0
+  http: ^1.2.2
+  path: ^1.9.0
+
   cupertino_icons: ^1.0.2
   flutter_dotenv: ^6.0.0
   uuid: ^4.5.2

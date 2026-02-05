@@ -1,5 +1,6 @@
 // lib/features/splash/presentation/widgets/splash_title.dart
 import 'package:flutter/material.dart';
+import '../../../../global/widgets/widgets.dart';
 
 class SplashTitle extends StatelessWidget {
   const SplashTitle({super.key});
@@ -9,7 +10,7 @@ class SplashTitle extends StatelessWidget {
     return Column(
       children: [
         // App name
-        Text(
+        AppText(
           'MONI',
           style: TextStyle(
             fontSize: 48,
@@ -27,7 +28,7 @@ class SplashTitle extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         // Slogan
-        Text(
+        AppText(
           'Save & Grow',
           style: TextStyle(
             fontSize: 16,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../domain/entities/category_entity.dart';
 import '../bloc/category_bloc.dart';
 import '../bloc/category_event.dart';
@@ -50,10 +50,7 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isEditing ? 'Sửa nhóm' : 'Thêm nhóm',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: AppText.heading4(isEditing ? 'Sửa nhóm' : 'Thêm nhóm'),
         elevation: 0,
       ),
       body: BlocConsumer<CategoryBloc, CategoryState>(
@@ -61,12 +58,7 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
           if (state is CategoryActionSuccess) {
             context.pop(true);
           } else if (state is CategoryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.red,
-              ),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -84,15 +76,10 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
                   const SizedBox(height: 24),
 
                   // Name input
-                  TextFormField(
+                  AppInput(
                     controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Tên nhóm',
-                      prefixIcon: const Icon(Icons.label),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    labelText: 'Tên nhóm',
+                    prefixIcon: Icons.label,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Vui lòng nhập tên nhóm';
@@ -116,27 +103,10 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
                   const SizedBox(height: 32),
 
                   // Save button
-                  ElevatedButton(
+                  AppButton.primary(
+                    text: isEditing ? 'Cập nhật' : 'Lưu',
+                    isLoading: isLoading,
                     onPressed: isLoading ? null : _handleSave,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            isEditing ? 'Cập nhật' : 'Lưu',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                   ),
                 ],
               ),
@@ -148,138 +118,106 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
   }
 
   Widget _buildPreviewCard() {
-    return Card(
+    return AppCard.padded(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const Text(
-              'Xem trước',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        children: [
+          AppText.caption('Xem trước'),
+          const SizedBox(height: 16),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _selectedColor.withOpacity(0.2),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 16),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: _selectedColor.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _selectedIcon ?? Icons.help_outline,
-                color: _selectedColor,
-                size: 40,
-              ),
+            child: Icon(
+              _selectedIcon ?? Icons.help_outline,
+              color: _selectedColor,
+              size: 40,
             ),
-            const SizedBox(height: 16),
-            Text(
-              _nameController.text.isEmpty ? 'Tên nhóm' : _nameController.text,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 16),
+          AppText.heading4(
+            _nameController.text.isEmpty ? 'Tên nhóm' : _nameController.text,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _selectedColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _selectedColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                _selectedType == TransactionCategoryType.income
-                    ? 'Thu nhập'
-                    : _selectedType == TransactionCategoryType.expense
-                        ? 'Chi tiêu'
-                        : 'Cả hai',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _selectedColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            child: AppText.caption(
+              _selectedType == TransactionCategoryType.income
+                  ? 'Thu nhập'
+                  : _selectedType == TransactionCategoryType.expense
+                      ? 'Chi tiêu'
+                      : 'Cả hai',
+              color: _selectedColor,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTypeSelector() {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Loại nhóm',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+    return AppCard.padded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.label('Loại nhóm'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<TransactionCategoryType>(
+                  value: TransactionCategoryType.income,
+                  groupValue: _selectedType,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value!;
+                    });
+                  },
+                  title: AppText.body('Thu'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<TransactionCategoryType>(
-                    value: TransactionCategoryType.income,
-                    groupValue: _selectedType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                      });
-                    },
-                    title: const Text('Thu'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              Expanded(
+                child: RadioListTile<TransactionCategoryType>(
+                  value: TransactionCategoryType.expense,
+                  groupValue: _selectedType,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value!;
+                    });
+                  },
+                  title: AppText.body('Chi'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                Expanded(
-                  child: RadioListTile<TransactionCategoryType>(
-                    value: TransactionCategoryType.expense,
-                    groupValue: _selectedType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                      });
-                    },
-                    title: const Text('Chi'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              Expanded(
+                child: RadioListTile<TransactionCategoryType>(
+                  value: TransactionCategoryType.both,
+                  groupValue: _selectedType,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value!;
+                    });
+                  },
+                  title: AppText.body('Cả 2'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                Expanded(
-                  child: RadioListTile<TransactionCategoryType>(
-                    value: TransactionCategoryType.both,
-                    groupValue: _selectedType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                      });
-                    },
-                    title: const Text('Cả 2'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -320,12 +258,9 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
               ),
               const SizedBox(width: 12),
             ],
-            Text(
+            AppText.body(
               _selectedIcon == null ? 'Chọn icon' : 'Đã chọn icon',
-              style: TextStyle(
-                fontSize: 16,
-                color: _selectedIcon == null ? Colors.grey : Colors.black,
-              ),
+              color: _selectedIcon == null ? Colors.grey : Colors.black,
             ),
             const Spacer(),
             const Icon(Icons.arrow_forward_ios, size: 16),
@@ -376,10 +311,7 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Đã chọn màu',
-              style: TextStyle(fontSize: 16),
-            ),
+            AppText.body('Đã chọn màu'),
             const Spacer(),
             const Icon(Icons.arrow_forward_ios, size: 16),
           ],
@@ -394,12 +326,7 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
     }
 
     if (_selectedIcon == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn icon'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.showWarning(context, 'Vui lòng chọn icon');
       return;
     }
 

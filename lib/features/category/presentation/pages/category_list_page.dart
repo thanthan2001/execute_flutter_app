@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../domain/entities/category_entity.dart';
 import '../bloc/category_bloc.dart';
 import '../bloc/category_event.dart';
@@ -26,30 +27,15 @@ class _CategoryListPageState extends State<CategoryListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Quản lý nhóm',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: AppText.heading4('Quản lý nhóm'),
         elevation: 0,
       ),
       body: BlocConsumer<CategoryBloc, CategoryState>(
         listener: (context, state) {
           if (state is CategoryActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.green,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppSnackBar.showSuccess(context, state.message);
           } else if (state is CategoryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -65,14 +51,14 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   const Icon(Icons.error_outline,
                       size: 64, color: AppColors.red),
                   const SizedBox(height: 16),
-                  Text(state.message),
+                  AppText.body(state.message),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
                       context.read<CategoryBloc>().add(const LoadCategories());
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Thử lại'),
+                    label: AppText.label('Thử lại'),
                   ),
                 ],
               ),
@@ -83,7 +69,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
             return _buildCategoryGrid(context, state.categories);
           }
 
-          return const Center(child: Text('Kéo xuống để tải dữ liệu'));
+          return  Center(child: AppText.body('Kéo xuống để tải dữ liệu'));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -94,7 +80,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('Thêm nhóm'),
+        label: AppText.label('Thêm nhóm'),
       ),
     );
   }
@@ -108,14 +94,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
           children: [
             Icon(Icons.category_outlined, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text(
-              'Chưa có nhóm nào',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            AppText.heading4('Chưa có nhóm nào', color: Colors.grey[600]),
           ],
         ),
       );
@@ -153,11 +132,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
       },
       onLongPress: () => _showDeleteDialog(context, category),
       borderRadius: BorderRadius.circular(16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+      child: AppCard(
+        borderRadius: BorderRadius.circular(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -177,12 +153,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
+              child: AppText.bodySmall(
                 category.name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -195,17 +167,13 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 color: category.color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
+              child: AppText.overline(
                 category.type == TransactionCategoryType.income
                     ? 'Thu'
                     : category.type == TransactionCategoryType.expense
                         ? 'Chi'
                         : 'Cả hai',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: category.color,
-                  fontWeight: FontWeight.w500,
-                ),
+                color: category.color,
               ),
             ),
           ],
@@ -216,23 +184,13 @@ class _CategoryListPageState extends State<CategoryListPage> {
 
   Future<void> _showDeleteDialog(
       BuildContext context, CategoryEntity category) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa nhóm "${category.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.red),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa nhóm "${category.name}"?',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      isDanger: true,
     );
 
     if (confirmed == true && mounted) {

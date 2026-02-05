@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../global/widgets/widgets.dart';
 
 /// Widget hiển thị Pie Chart theo nhóm chi tiêu
 class ExpensePieChart extends StatelessWidget {
@@ -17,11 +18,8 @@ class ExpensePieChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (expenseByCategory.isEmpty) {
-      return const Center(
-        child: Text(
-          'Chưa có dữ liệu chi tiêu',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
+      return Center(
+        child: AppText.bodySmall('Chưa có dữ liệu chi tiêu', color: Colors.grey),
       );
     }
 

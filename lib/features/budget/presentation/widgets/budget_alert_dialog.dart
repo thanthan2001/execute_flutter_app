@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/budget_status.dart';
 
@@ -32,11 +33,9 @@ class BudgetAlertDialog extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
+            child: AppText.body(
               _getAlertTitle(),
-              style: TextStyle(
-                color: Color(status.alertLevel.colorValue),
-              ),
+              color: Color(status.alertLevel.colorValue),
             ),
           ),
         ],
@@ -51,13 +50,7 @@ class BudgetAlertDialog extends StatelessWidget {
               Icon(category.icon, color: category.color, size: 32),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  category.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: AppText.heading4(category.name),
               ),
             ],
           ),
@@ -104,13 +97,9 @@ class BudgetAlertDialog extends StatelessWidget {
           const SizedBox(height: 8),
 
           Center(
-            child: Text(
+            child: AppText.label(
               '${status.percentage.toStringAsFixed(1)}% đã sử dụng',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Color(status.alertLevel.colorValue),
-              ),
+              color: Color(status.alertLevel.colorValue),
             ),
           ),
 
@@ -129,12 +118,9 @@ class BudgetAlertDialog extends StatelessWidget {
                 Icon(Icons.lightbulb, color: Colors.blue[700], size: 20),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child: AppText.bodySmall(
                     _getRecommendation(),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.blue[900],
-                    ),
+                    color: Colors.blue[900],
                   ),
                 ),
               ],
@@ -143,9 +129,9 @@ class BudgetAlertDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        TextButton(
+        AppButton.text(
+          text: 'Đóng',
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Đóng'),
         ),
       ],
     );
@@ -162,22 +148,9 @@ class BudgetAlertDialog extends StatelessWidget {
         Icon(icon, size: 20, color: Colors.grey[600]),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-            ),
-          ),
+          child: AppText.bodySmall(label, color: Colors.grey[700]),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: valueColor,
-          ),
-        ),
+        AppText.label(value, color: valueColor),
       ],
     );
   }

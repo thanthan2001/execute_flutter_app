@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/configs/app_colors.dart';
 import '../../../../core/utils/currency_input_formatter.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../bloc/transaction_bloc.dart';
@@ -65,10 +66,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isEditing ? 'Sửa giao dịch' : 'Thêm giao dịch',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: AppText.heading4(isEditing ? 'Sửa giao dịch' : 'Thêm giao dịch'),
         elevation: 0,
       ),
       body: BlocConsumer<TransactionBloc, TransactionState>(
@@ -77,12 +75,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             // Pop với result = true để báo đã thành công
             context.pop(true);
           } else if (state is TransactionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.red,
-              ),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -123,31 +116,22 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                       color: Colors.grey[400],
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'Chưa có nhóm nào',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    AppText.heading4('Chưa có nhóm nào',
+                        color: Colors.grey[600]),
                     const SizedBox(height: 8),
-                    Text(
+                    AppText.bodySmall(
                       'Vui lòng tạo nhóm trước khi thêm giao dịch',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[500],
-                      ),
+                      color: Colors.grey[500],
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton.icon(
+                    AppButton.primary(
+                      text: 'Tạo nhóm mới',
+                      icon: Icons.add,
                       onPressed: () {
                         context.pop();
                         context.push('/categories/add');
                       },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Tạo nhóm mới'),
                     ),
                   ],
                 ),
@@ -197,91 +181,73 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   /// Build type selector (Thu/Chi)
   Widget _buildTypeSelector() {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Loại giao dịch',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+    return AppCard.padded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.label('Loại giao dịch'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<TransactionType>(
+                  value: TransactionType.income,
+                  groupValue: _selectedType,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value!;
+                      _selectedCategory = null; // Reset category
+                    });
+                  },
+                  title: Row(
+                    children: [
+                      const Icon(Icons.arrow_downward,
+                          color: AppColors.green, size: 20),
+                      const SizedBox(width: 8),
+                      AppText.body('Thu'),
+                    ],
+                  ),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<TransactionType>(
-                    value: TransactionType.income,
-                    groupValue: _selectedType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                        _selectedCategory = null; // Reset category
-                      });
-                    },
-                    title: const Row(
-                      children: [
-                        Icon(Icons.arrow_downward,
-                            color: AppColors.green, size: 20),
-                        SizedBox(width: 8),
-                        Text('Thu'),
-                      ],
-                    ),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
+              Expanded(
+                child: RadioListTile<TransactionType>(
+                  value: TransactionType.expense,
+                  groupValue: _selectedType,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value!;
+                      _selectedCategory = null; // Reset category
+                    });
+                  },
+                  title: Row(
+                    children: [
+                      const Icon(Icons.arrow_upward,
+                          color: AppColors.red, size: 20),
+                      const SizedBox(width: 8),
+                      AppText.body('Chi'),
+                    ],
                   ),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                Expanded(
-                  child: RadioListTile<TransactionType>(
-                    value: TransactionType.expense,
-                    groupValue: _selectedType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                        _selectedCategory = null; // Reset category
-                      });
-                    },
-                    title: const Row(
-                      children: [
-                        Icon(Icons.arrow_upward,
-                            color: AppColors.red, size: 20),
-                        SizedBox(width: 8),
-                        Text('Chi'),
-                      ],
-                    ),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   /// Build amount input
   Widget _buildAmountInput() {
-    return TextFormField(
+    return AppInput(
       controller: _amountController,
-      decoration: InputDecoration(
-        labelText: 'Số tiền',
-        prefixIcon: const Icon(Icons.attach_money),
-        suffixText: 'đ',
-        hintText: 'Ví dụ: 2.000.000',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
+      labelText: 'Số tiền',
+      prefixIcon: Icons.attach_money,
+      suffixText: 'đ',
+      hintText: 'Ví dụ: 2.000.000',
       keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
@@ -303,15 +269,10 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   /// Build description input
   Widget _buildDescriptionInput() {
-    return TextFormField(
+    return AppInput(
       controller: _descriptionController,
-      decoration: InputDecoration(
-        labelText: 'Mô tả',
-        prefixIcon: const Icon(Icons.description),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
+      labelText: 'Mô tả',
+      prefixIcon: Icons.description,
       maxLines: 2,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -349,10 +310,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Text(
-          formattedDate,
-          style: const TextStyle(fontSize: 16),
-        ),
+        child: AppText.body(formattedDate),
       ),
     );
   }
@@ -371,24 +329,15 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     }).toList();
 
     if (filteredCategories.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('Chưa có nhóm nào'),
-        ),
+      return  AppCard.padded(
+        child: AppText.body('Chưa có nhóm nào'),
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Chọn nhóm',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        AppText.label('Chọn nhóm'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -406,7 +355,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                     color: isSelected ? Colors.white : category.color,
                   ),
                   const SizedBox(width: 4),
-                  Text(category.name),
+                  AppText.bodySmall(category.name),
                 ],
               ),
               onSelected: (selected) {
@@ -430,27 +379,11 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   /// Build save button
   Widget _buildSaveButton(bool isLoading) {
-    return ElevatedButton(
+    return AppButton.primary(
+      text: isEditing ? 'Cập nhật' : 'Lưu',
       onPressed: isLoading ? null : _handleSave,
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      child: isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(
-              isEditing ? 'Cập nhật' : 'Lưu',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+      isLoading: isLoading,
+      width: double.infinity,
     );
   }
 
@@ -461,12 +394,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     }
 
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn nhóm'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.showWarning(context, 'Vui lòng chọn nhóm');
       return;
     }
 

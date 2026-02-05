@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/currency_input_formatter.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/budget_entity.dart';
@@ -70,12 +71,7 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Không thể tải danh mục: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.showError(context, 'Không thể tải danh mục: $e');
       }
     }
   }
@@ -92,24 +88,14 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
     }
 
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn danh mục'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.showWarning(context, 'Vui lòng chọn danh mục');
       return;
     }
 
     final amount = CurrencyInputFormatter.getNumericValue(_amountController.text) ?? 0;
 
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Số tiền phải lớn hơn 0'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.showWarning(context, 'Số tiền phải lớn hơn 0');
       return;
     }
 
@@ -161,7 +147,7 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditMode ? 'Sửa Ngân Sách' : 'Thêm Ngân Sách'),
+        title: AppText.heading4(isEditMode ? 'Sửa Ngân Sách' : 'Thêm Ngân Sách'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -173,16 +159,10 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Category Selector
-                    const Text(
-                      'Danh mục',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    AppText.label('Danh mục'),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<CategoryEntity>(
-                      value: _selectedCategory,
+                      initialValue: _selectedCategory,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.category),
@@ -194,7 +174,7 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                             children: [
                               Icon(category.icon, color: category.color, size: 20),
                               const SizedBox(width: 8),
-                              Text(category.name),
+                              AppText.body(category.name),
                             ],
                           ),
                         );
@@ -215,21 +195,12 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                     const SizedBox(height: 24),
 
                     // Amount Input
-                    const Text(
-                      'Số tiền ngân sách',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    AppText.label('Số tiền ngân sách'),
                     const SizedBox(height: 8),
-                    TextFormField(
+                    AppInput(
                       controller: _amountController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.attach_money),
-                        suffixText: 'VND',
-                      ),
+                      prefixIcon: Icons.attach_money,
+                      suffixText: 'VND',
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         CurrencyInputFormatter(),
@@ -249,29 +220,23 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                     const SizedBox(height: 24),
 
                     // Period Selector
-                    const Text(
-                      'Chu kỳ',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    AppText.label('Chu kỳ'),
                     const SizedBox(height: 8),
                     SegmentedButton<BudgetPeriod>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                           value: BudgetPeriod.monthly,
-                          label: Text('Tháng'),
+                          label: AppText.body('Tháng'),
                           icon: Icon(Icons.calendar_month),
                         ),
                         ButtonSegment(
                           value: BudgetPeriod.quarterly,
-                          label: Text('Quý'),
+                          label: AppText.body('Quý'),
                           icon: Icon(Icons.calendar_view_month),
                         ),
                         ButtonSegment(
                           value: BudgetPeriod.yearly,
-                          label: Text('Năm'),
+                          label: AppText.body('Năm'),
                           icon: Icon(Icons.calendar_today),
                         ),
                       ],
@@ -286,26 +251,20 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                     const SizedBox(height: 24),
 
                     // Start Date
-                    const Text(
-                      'Ngày bắt đầu',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    AppText.label('Ngày bắt đầu'),
                     const SizedBox(height: 8),
-                    ListTile(
+                    AppListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: AppText.body(
+                        '${_startDate.day}/${_startDate.month}/${_startDate.year}',
+                      ),
+                      trailing: const Icon(Icons.edit),
+                      onTap: _selectStartDate,
                       tileColor: Colors.grey[100],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                         side: BorderSide(color: Colors.grey[300]!),
                       ),
-                      leading: const Icon(Icons.calendar_today),
-                      title: Text(
-                        '${_startDate.day}/${_startDate.month}/${_startDate.year}',
-                      ),
-                      trailing: const Icon(Icons.edit),
-                      onTap: _selectStartDate,
                     ),
 
                     const SizedBox(height: 24),
@@ -313,62 +272,44 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                     // End Date (Optional)
                     Row(
                       children: [
-                        const Text(
-                          'Ngày kết thúc (tùy chọn)',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        AppText.label('Ngày kết thúc (tùy chọn)'),
                         const Spacer(),
                         if (_endDate != null)
-                          TextButton(
+                          AppButton.text(
+                            text: 'Xóa',
                             onPressed: () {
                               setState(() {
                                 _endDate = null;
                               });
                             },
-                            child: const Text('Xóa'),
                           ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    ListTile(
+                    AppListTile(
+                      leading: const Icon(Icons.event),
+                      title: AppText.body(
+                        _endDate != null
+                            ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                            : 'Không giới hạn',
+                        color: _endDate != null ? null : Colors.grey,
+                      ),
+                      trailing: const Icon(Icons.edit),
+                      onTap: _selectEndDate,
                       tileColor: Colors.grey[100],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                         side: BorderSide(color: Colors.grey[300]!),
                       ),
-                      leading: const Icon(Icons.event),
-                      title: Text(
-                        _endDate != null
-                            ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                            : 'Không giới hạn',
-                        style: TextStyle(
-                          color: _endDate != null ? null : Colors.grey,
-                        ),
-                      ),
-                      trailing: const Icon(Icons.edit),
-                      onTap: _selectEndDate,
                     ),
 
                     const SizedBox(height: 32),
 
                     // Save Button
-                    SizedBox(
+                    AppButton.primary(
+                      text: isEditMode ? 'Cập nhật' : 'Lưu',
+                      onPressed: _saveBudget,
                       width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _saveBudget,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text(
-                          isEditMode ? 'Cập nhật' : 'Lưu',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
                     ),
                   ],
                 ),

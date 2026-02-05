@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/configs/app_colors.dart';
-import '../../../../core/configs/app_dimens.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../domain/entities/filter_options.dart';
 import '../../domain/entities/statistics_summary.dart';
 import '../bloc/statistics_bloc.dart';
@@ -41,10 +41,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Thống kê',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: AppText.heading4('Thống kê'),
         elevation: 0,
         actions: [
           // Filter button
@@ -84,7 +81,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             );
           }
 
-          return const Center(child: Text('Kéo xuống để tải dữ liệu'));
+          return  Center(child: AppText.body('Kéo xuống để tải dữ liệu'));
         },
       ),
     );
@@ -139,10 +136,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
             // Combined chart (Thu vs Chi)
             if (summary.totalIncome > 0 || summary.totalExpense > 0) ...[
-              const Text(
-                'Biểu đồ tổng quan',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              AppText.heading4('Biểu đồ tổng quan'),
               const SizedBox(height: 16),
               _buildCombinedChart(summary),
             ] else
@@ -188,10 +182,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               const SizedBox(height: 20),
 
               // Category list
-              const Text(
-                'Chi tiết theo nhóm',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              AppText.heading4('Chi tiết theo nhóm'),
               const SizedBox(height: 12),
               ...summary.incomeByCategory.map((cat) => _buildCategoryItem(cat)),
             ] else
@@ -237,10 +228,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               const SizedBox(height: 20),
 
               // Category list
-              const Text(
-                'Chi tiết theo nhóm',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              AppText.heading4('Chi tiết theo nhóm'),
               const SizedBox(height: 12),
               ...summary.expenseByCategory
                   .map((cat) => _buildCategoryItem(cat)),
@@ -270,153 +258,110 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         break;
     }
 
-    return Card(
+    return AppCard.padded(
       color: Colors.blue.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              filterText,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.blue.shade700,
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.filter_alt, color: Colors.blue.shade700, size: 20),
-          ],
-        ),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
+          const SizedBox(width: 8),
+          AppText.bodySmall(
+            filterText,
+            color: Colors.blue.shade700,
+          ),
+          const Spacer(),
+          Icon(Icons.filter_alt, color: Colors.blue.shade700, size: 20),
+        ],
       ),
     );
   }
 
   Widget _buildSummaryCard(
       String title, double amount, Color color, IconData icon) {
-    return Card(
+    return AppCard.padded(
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 4),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              NumberFormat.currency(
-                locale: 'vi_VN',
-                symbol: 'đ',
-                decimalDigits: 0,
-              ).format(amount),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 4),
+              AppText.caption(title, color: Colors.grey.shade600),
+            ],
+          ),
+          const SizedBox(height: 8),
+          AppText.heading4(
+            NumberFormat.currency(
+              locale: 'vi_VN',
+              symbol: 'đ',
+              decimalDigits: 0,
+            ).format(amount),
+            color: color,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBalanceCard(double balance) {
     final isPositive = balance >= 0;
-    return Card(
+    return AppCard.padded(
       elevation: 2,
       color: isPositive ? AppColors.green : AppColors.red,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(
-              isPositive ? Icons.savings : Icons.warning,
-              color: isPositive ? AppColors.green : AppColors.red,
-              size: 32,
+      child: Row(
+        children: [
+          Icon(
+            isPositive ? Icons.savings : Icons.warning,
+            color: isPositive ? AppColors.green : AppColors.red,
+            size: 32,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                 AppText.heading4(
+                  'Số dư',
+                  color: AppColors.white,
+                ),
+                const SizedBox(height: 4),
+                AppText.heading4(
+                  NumberFormat.currency(
+                    locale: 'vi_VN',
+                    symbol: 'đ',
+                    decimalDigits: 0,
+                  ).format(balance.abs()),
+                  color: AppColors.white,
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Số dư',
-                    style: TextStyle(
-                      fontSize: AppDimens.textSize20,
-                      color: AppColors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    NumberFormat.currency(
-                      locale: 'vi_VN',
-                      symbol: 'đ',
-                      decimalDigits: 0,
-                    ).format(balance.abs()),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTotalCard(
       String title, double amount, Color color, IconData icon) {
-    return Card(
+    return AppCard.padded(
       elevation: 3,
       color: color.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 48),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              NumberFormat.currency(
-                locale: 'vi_VN',
-                symbol: 'đ',
-                decimalDigits: 0,
-              ).format(amount),
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 48),
+          const SizedBox(height: 12),
+          AppText.body(title, color: Colors.grey.shade700),
+          const SizedBox(height: 8),
+          AppText.heading2(
+            NumberFormat.currency(
+              locale: 'vi_VN',
+              symbol: 'đ',
+              decimalDigits: 0,
+            ).format(amount),
+            color: color,
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -525,9 +470,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   }
 
   Widget _buildCategoryItem(CategoryStatistics cat) {
-    return Card(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
+      child: AppListTile(
         leading: Container(
           width: 48,
           height: 48,
@@ -540,34 +485,21 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             color: Color(cat.categoryColorValue),
           ),
         ),
-        title: Text(
-          cat.categoryName,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text('${cat.transactionCount} giao dịch'),
+        title: AppText.body(cat.categoryName),
+        subtitle: AppText.caption('${cat.transactionCount} giao dịch'),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
+            AppText.body(
               NumberFormat.currency(
                 locale: 'vi_VN',
                 symbol: 'đ',
                 decimalDigits: 0,
               ).format(cat.amount),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(cat.categoryColorValue),
-              ),
+              color: Color(cat.categoryColorValue),
             ),
-            Text(
-              '${cat.percentage.toStringAsFixed(1)}%',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
+            AppText.caption('${cat.percentage.toStringAsFixed(1)}%'),
           ],
         ),
       ),
@@ -582,12 +514,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           children: [
             Icon(Icons.inbox, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            Text(
+            AppText.body(
               'Không có dữ liệu cho khoảng thời gian này',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              color: Colors.grey.shade600,
               textAlign: TextAlign.center,
             ),
           ],
@@ -603,14 +532,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         children: [
           const Icon(Icons.error_outline, size: 64, color: AppColors.red),
           const SizedBox(height: 16),
-          Text(message),
+          AppText.body(message),
           const SizedBox(height: 16),
-          ElevatedButton.icon(
+          AppButton.primary(
+            text: 'Thử lại',
+            icon: Icons.refresh,
             onPressed: () {
               context.read<StatisticsBloc>().add(const LoadStatistics());
             },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Thử lại'),
           ),
         ],
       ),

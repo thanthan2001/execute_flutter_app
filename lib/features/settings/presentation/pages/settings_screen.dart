@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../bloc/settings_bloc.dart';
 import '../bloc/settings_event.dart';
 import '../bloc/settings_state.dart';
@@ -13,29 +15,17 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài đặt'),
+        title: AppText.heading4('Cài đặt'),
         centerTitle: true,
       ),
       body: BlocListener<SettingsBloc, SettingsState>(
         listener: (context, state) {
           if (state is TransactionsCleared) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Đã xóa toàn bộ giao dịch'),
-                backgroundColor: AppColors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
+            AppSnackBar.showSuccess(context, 'Đã xóa toàn bộ giao dịch');
             // Pop về màn hình trước và báo là cần refresh
             Navigator.of(context).pop(true);
           } else if (state is ClearTransactionsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Lỗi: ${state.message}'),
-                backgroundColor: AppColors.red,
-                duration: const Duration(seconds: 3),
-              ),
-            );
+            AppSnackBar.showError(context, 'Lỗi: ${state.message}');
           }
         },
         child: BlocBuilder<SettingsBloc, SettingsState>(
@@ -61,10 +51,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildAppInfoSection(BuildContext context) {
     return ExpansionTile(
       leading: const Icon(Icons.info_outline, color: Colors.blue),
-      title: const Text(
-        'Thông tin ứng dụng',
-        style: TextStyle(fontWeight: FontWeight.w600),
-      ),
+      title: AppText.label('Thông tin ứng dụng'),
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -87,35 +74,15 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Tên app
-              const Text(
-                'MONI',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-              ),
+              AppText.heading1('MONI'),
               const SizedBox(height: 4),
 
               // Slogan
-              Text(
-                'Save & Grow',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  letterSpacing: 2,
-                ),
-              ),
+              AppText.bodySmall('Save & Grow', color: Colors.grey[600]),
               const SizedBox(height: 8),
 
               // Phiên bản
-              Text(
-                'Phiên bản 1.0.0',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
+              AppText.bodySmall('Phiên bản 1.0.0', color: Colors.grey[600]),
               const SizedBox(height: 16),
 
               // Thông tin thêm
@@ -134,20 +101,8 @@ class SettingsScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        AppText.bodySmall(label, color: Colors.grey),
+        AppText.bodySmall(value, color: Colors.grey.shade800),
       ],
     );
   }
@@ -162,33 +117,30 @@ class SettingsScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'Quản lý dữ liệu',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
-              letterSpacing: 0.5,
-            ),
-          ),
+          child: AppText.caption('Quản lý dữ liệu', color: Colors.grey[600]),
         ),
-
+        // Backup & Restore - Navigate to dedicated page
+        AppListTile.navigation(
+          icon: Icons.backup_outlined,
+          iconColor: Colors.blueGrey,
+          title: 'Sao lưu & Khôi phục',
+          subtitle: 'Quản lý backup và restore dữ liệu',
+          onTap: () => context.push('/backup'),
+        ),
+    
+      
         // Nút xóa toàn bộ dữ liệu
-        ListTile(
+        AppListTile(
           leading: Icon(
             Icons.delete_sweep,
             color: isLoading ? Colors.grey : AppColors.red,
           ),
-          title: Text(
+          title: AppText.label(
             'Xóa toàn bộ dữ liệu giao dịch',
-            style: TextStyle(
-              color: isLoading ? Colors.grey : AppColors.red,
-              fontWeight: FontWeight.w600,
-            ),
+            color: isLoading ? Colors.grey : AppColors.red,
           ),
-          subtitle: const Text(
+          subtitle: AppText.caption(
             'Xóa tất cả giao dịch đã lưu (không thể hoàn tác)',
-            style: TextStyle(fontSize: 12),
           ),
           trailing: isLoading
               ? const SizedBox(
@@ -200,46 +152,26 @@ class SettingsScreen extends StatelessWidget {
           enabled: !isLoading,
           onTap: () => _showClearDataDialog(context),
         ),
+
+
       ],
     );
   }
 
   /// Hiển thị dialog xác nhận xóa dữ liệu
   void _showClearDataDialog(BuildContext context) {
-    showDialog(
+    AppDialog.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text(
-          'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu giao dịch không? '
-          'Hành động này không thể hoàn tác.',
-        ),
-        actions: [
-          // Nút Hủy
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Hủy'),
-          ),
-
-          // Nút Xóa
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              // Dispatch event xóa dữ liệu (sử dụng context gốc, không phải dialogContext)
-              context
-                  .read<SettingsBloc>()
-                  .add(const ClearAllTransactionsEvent());
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.red,
-            ),
-            child: const Text(
-              'Xóa',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
+      title: 'Xác nhận xóa',
+      message:
+          'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu giao dịch không? Hành động này không thể hoàn tác.',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      isDanger: true,
+    ).then((confirmed) {
+      if (confirmed == true) {
+        context.read<SettingsBloc>().add(const ClearAllTransactionsEvent());
+      }
+    });
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../bloc/dashboard_state.dart';
 
 /// Widget hiển thị chip filter cho các khoảng thời gian
@@ -69,7 +70,7 @@ class DateFilterChips extends StatelessWidget {
             color: isSelected ? Colors.white : theme.primaryColor,
           ),
           const SizedBox(width: 4),
-          Text(label),
+          AppText.bodySmall(label),
         ],
       ),
       selected: isSelected,

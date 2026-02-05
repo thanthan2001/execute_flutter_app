@@ -57,7 +57,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
       final model = models.firstWhere((m) => m.id == id);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(CacheFailure(message: 'Transaction not found'));
+      return const Left(CacheFailure(message: 'Transaction not found'));
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../global/widgets/widgets.dart';
 
 /// Widget hiển thị card tổng quan thu chi
 class SummaryCard extends StatelessWidget {
@@ -48,25 +49,17 @@ class SummaryCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: AppText.bodySmall(
                   title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
-                  ),
+                  color: Colors.grey[700],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          AppText.heading4(
             formattedAmount,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            color: color,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

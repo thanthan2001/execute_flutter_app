@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../../global/widgets/widgets.dart';
 
 /// Dialog để chọn icon từ FontAwesome
 class IconPickerDialog extends StatefulWidget {
@@ -96,13 +97,7 @@ class _IconPickerDialogState extends State<IconPickerDialog> {
               children: [
                 const Icon(Icons.collections, color: Colors.blue),
                 const SizedBox(width: 12),
-                const Text(
-                  'Chọn icon',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                AppText.heading4('Chọn icon'),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -178,14 +173,11 @@ class _IconPickerDialogState extends State<IconPickerDialog> {
                                 : Colors.grey[700],
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          AppText.caption(
                             name,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[600],
-                            ),
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[600],
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -203,16 +195,16 @@ class _IconPickerDialogState extends State<IconPickerDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
+                AppButton.text(
+                  text: 'Hủy',
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Hủy'),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(
+                AppButton.primary(
+                  text: 'Chọn',
                   onPressed: _selectedIcon == null
                       ? null
                       : () => Navigator.of(context).pop(_selectedIcon),
-                  child: const Text('Chọn'),
                 ),
               ],
             ),

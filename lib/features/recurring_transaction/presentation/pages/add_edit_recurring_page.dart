@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/currency_input_formatter.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
@@ -83,9 +84,7 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
 
   void _save() {
     if (!_formKey.currentState!.validate() || _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin')),
-      );
+      AppSnackBar.showWarning(context, 'Vui lòng điền đầy đủ thông tin');
       return;
     }
 
@@ -118,7 +117,8 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.recurring == null ? 'Thêm Định Kỳ' : 'Sửa Định Kỳ'),
+        title: AppText.heading4(
+            widget.recurring == null ? 'Thêm Định Kỳ' : 'Sửa Định Kỳ'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -130,19 +130,19 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                   children: [
                     // Loại giao dịch (Thu/Chi)
                     DropdownButtonFormField<TransactionCategoryType>(
-                      value: _selectedType,
+                      initialValue: _selectedType,
                       decoration: const InputDecoration(
                         labelText: 'Loại giao dịch',
                         border: OutlineInputBorder(),
                       ),
-                      items: [
-                        const DropdownMenuItem(
+                      items:  [
+                        DropdownMenuItem(
                           value: TransactionCategoryType.income,
-                          child: Text('🔽 Thu'),
+                          child: AppText.body('💲 Thu'),
                         ),
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: TransactionCategoryType.expense,
-                          child: Text('🔼 Chi'),
+                          child: AppText.body('🔽 Chi'),
                         ),
                       ],
                       onChanged: (val) {
@@ -155,7 +155,7 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<CategoryEntity>(
-                      value: _selectedCategory,
+                      initialValue: _selectedCategory,
                       decoration: const InputDecoration(
                         labelText: 'Danh mục',
                         border: OutlineInputBorder(),
@@ -167,7 +167,7 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                             children: [
                               Icon(cat.icon, color: cat.color, size: 20),
                               const SizedBox(width: 8),
-                              Text(cat.name),
+                              AppText.body(cat.name),
                             ],
                           ),
                         );
@@ -175,31 +175,27 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                       onChanged: (val) => setState(() => _selectedCategory = val),
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppInput(
                       controller: _amountController,
-                      decoration: const InputDecoration(
-                        labelText: 'Số tiền',
-                        border: OutlineInputBorder(),
-                        suffixText: 'VND',
-                      ),
+                      labelText: 'Số tiền',
+                      suffixText: 'VND',
+                      prefixIcon: Icons.attach_money,
                       keyboardType: TextInputType.number,
                       inputFormatters: [CurrencyInputFormatter()],
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Nhập số tiền' : null,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppInput(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Mô tả',
-                        border: OutlineInputBorder(),
-                      ),
+                      labelText: 'Mô tả',
+                      prefixIcon: Icons.description,
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Nhập mô tả' : null,
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<RecurringFrequency>(
-                      value: _selectedFrequency,
+                      initialValue: _selectedFrequency,
                       decoration: const InputDecoration(
                         labelText: 'Tần suất',
                         border: OutlineInputBorder(),
@@ -207,17 +203,17 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                       items: RecurringFrequency.values.map((freq) {
                         return DropdownMenuItem(
                           value: freq,
-                          child: Text(freq.displayName),
+                          child: AppText.body(freq.displayName),
                         );
                       }).toList(),
                       onChanged: (val) =>
                           setState(() => _selectedFrequency = val!),
                     ),
                     const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Ngày kế tiếp'),
-                      subtitle:
-                          Text('${_nextDate.day}/${_nextDate.month}/${_nextDate.year}'),
+                    AppListTile(
+                      title: AppText.body('Ngày kế tiếp'),
+                      subtitle: AppText.caption(
+                          '${_nextDate.day}/${_nextDate.month}/${_nextDate.year}'),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: () async {
                         final picked = await showDatePicker(
@@ -231,19 +227,18 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                         }
                       },
                     ),
-                    SwitchListTile(
-                      title: const Text('Hoạt động'),
+                    AppListTile.withSwitch(
+                      icon: Icons.toggle_on,
+                      iconColor: _isActive ? Colors.green : Colors.grey,
+                      title: 'Hoạt động',
                       value: _isActive,
                       onChanged: (val) => setState(() => _isActive = val),
                     ),
                     const SizedBox(height: 24),
-                    SizedBox(
+                    AppButton.primary(
+                      text: 'Lưu',
+                      onPressed: _save,
                       width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _save,
-                        child: const Text('Lưu'),
-                      ),
                     ),
                   ],
                 ),

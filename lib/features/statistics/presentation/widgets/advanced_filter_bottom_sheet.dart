@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/filter_options.dart';
 import '../bloc/statistics_bloc.dart';
@@ -106,13 +107,7 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
         children: [
           const Icon(Icons.filter_alt, color: Colors.blue),
           const SizedBox(width: 8),
-          const Text(
-            'Bộ Lọc Nâng Cao',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          AppText.heading4('Bộ Lọc Nâng Cao'),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.close),
@@ -127,14 +122,7 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Chế độ thời gian',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
-        ),
+        AppText.caption('Chế độ thời gian', color: Colors.grey),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -157,7 +145,7 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
         children: [
           Icon(icon, size: 16, color: isSelected ? Colors.white : Colors.grey),
           const SizedBox(width: 4),
-          Text(label),
+          AppText.bodySmall(label),
         ],
       ),
       selected: isSelected,
@@ -204,12 +192,12 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
   }
 
   Widget _buildDayPicker() {
-    return Card(
-      child: ListTile(
+    return AppCard(
+      child: AppListTile(
         leading: const Icon(Icons.today, color: Colors.blue),
-        title: const Text('Chọn ngày'),
-        subtitle:
-            Text(DateFormat('EEEE, dd/MM/yyyy', 'vi').format(_selectedDate)),
+        title: AppText.body('Chọn ngày'),
+        subtitle: AppText.caption(
+            DateFormat('EEEE, dd/MM/yyyy', 'vi').format(_selectedDate)),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
           final picked = await showDatePicker(
@@ -244,190 +232,172 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
       'Tháng 12'
     ];
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.calendar_month, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
-                  'Chọn tháng và năm',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: _selectedMonth,
-                    decoration: const InputDecoration(
-                      labelText: 'Tháng',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: List.generate(12, (index) {
-                      return DropdownMenuItem(
-                        value: index + 1,
-                        child: Text(months[index]),
-                      );
-                    }),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedMonth = value;
-                        });
-                      }
-                    },
+    return AppCard.padded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_month, color: Colors.blue),
+              const SizedBox(width: 8),
+              AppText.label('Chọn tháng và năm'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue: _selectedMonth,
+                  decoration: const InputDecoration(
+                    labelText: 'Tháng',
+                    border: OutlineInputBorder(),
                   ),
+                  items: List.generate(12, (index) {
+                    return DropdownMenuItem(
+                      value: index + 1,
+                      child: AppText.body(months[index]),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedMonth = value;
+                      });
+                    }
+                  },
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: _selectedYear,
-                    decoration: const InputDecoration(
-                      labelText: 'Năm',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: List.generate(10, (index) {
-                      final year = DateTime.now().year - 5 + index;
-                      return DropdownMenuItem(
-                        value: year,
-                        child: Text(year.toString()),
-                      );
-                    }),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedYear = value;
-                        });
-                      }
-                    },
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue: _selectedYear,
+                  decoration: const InputDecoration(
+                    labelText: 'Năm',
+                    border: OutlineInputBorder(),
                   ),
+                  items: List.generate(10, (index) {
+                    final year = DateTime.now().year - 5 + index;
+                    return DropdownMenuItem(
+                      value: year,
+                      child: AppText.body(year.toString()),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedYear = value;
+                      });
+                    }
+                  },
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildYearPicker() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.calendar_view_month, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
-                  'Chọn năm',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
+    return AppCard.padded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_view_month, color: Colors.blue),
+              const SizedBox(width: 8),
+              AppText.label('Chọn năm'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int>(
+            initialValue: _selectedYear,
+            decoration: const InputDecoration(
+              labelText: 'Năm',
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              value: _selectedYear,
-              decoration: const InputDecoration(
-                labelText: 'Năm',
-                border: OutlineInputBorder(),
-              ),
-              items: List.generate(10, (index) {
-                final year = DateTime.now().year - 5 + index;
-                return DropdownMenuItem(
-                  value: year,
-                  child: Text(year.toString()),
-                );
-              }),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedYear = value;
-                  });
-                }
-              },
-            ),
-          ],
-        ),
+            items: List.generate(10, (index) {
+              final year = DateTime.now().year - 5 + index;
+              return DropdownMenuItem(
+                value: year,
+                child: AppText.body(year.toString()),
+              );
+            }),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _selectedYear = value;
+                });
+              }
+            },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRangePicker() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.date_range, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
-                  'Khoảng thời gian',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
+    return AppCard.padded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.date_range, color: Colors.blue),
+              const SizedBox(width: 8),
+              AppText.label('Khoảng thời gian'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          AppListTile(
+            title: AppText.body('Từ ngày'),
+            subtitle: AppText.caption(
+              _rangeStart != null
+                  ? DateFormat('dd/MM/yyyy').format(_rangeStart!)
+                  : 'Chưa chọn',
             ),
-            const SizedBox(height: 12),
-            ListTile(
-              title: const Text('Từ ngày'),
-              subtitle: Text(
-                _rangeStart != null
-                    ? DateFormat('dd/MM/yyyy').format(_rangeStart!)
-                    : 'Chưa chọn',
-              ),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _rangeStart ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) {
-                  setState(() {
-                    _rangeStart = picked;
-                  });
-                }
-              },
+            trailing: const Icon(Icons.calendar_today),
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _rangeStart ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+              if (picked != null) {
+                setState(() {
+                  _rangeStart = picked;
+                });
+              }
+            },
+          ),
+          const Divider(),
+          AppListTile(
+            title: AppText.body('Đến ngày'),
+            subtitle: AppText.caption(
+              _rangeEnd != null
+                  ? DateFormat('dd/MM/yyyy').format(_rangeEnd!)
+                  : 'Chưa chọn',
             ),
-            const Divider(),
-            ListTile(
-              title: const Text('Đến ngày'),
-              subtitle: Text(
-                _rangeEnd != null
-                    ? DateFormat('dd/MM/yyyy').format(_rangeEnd!)
-                    : 'Chưa chọn',
-              ),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _rangeEnd ?? DateTime.now(),
-                  firstDate: _rangeStart ?? DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) {
-                  setState(() {
-                    _rangeEnd = DateTime(
-                        picked.year, picked.month, picked.day, 23, 59, 59);
-                  });
-                }
-              },
-            ),
-          ],
-        ),
+            trailing: const Icon(Icons.calendar_today),
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _rangeEnd ?? DateTime.now(),
+                firstDate: _rangeStart ?? DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+              if (picked != null) {
+                setState(() {
+                  _rangeEnd = DateTime(
+                      picked.year, picked.month, picked.day, 23, 59, 59);
+                });
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -436,14 +406,7 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Lựa chọn nhanh',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
-        ),
+        AppText.caption('Lựa chọn nhanh', color: Colors.grey),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -463,7 +426,7 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
 
   Widget _buildPresetChip(String label, FilterOptions preset) {
     return ActionChip(
-      label: Text(label),
+      label: AppText.bodySmall(label),
       avatar: const Icon(Icons.flash_on, size: 16),
       onPressed: () {
         setState(() {
@@ -482,17 +445,10 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Nhóm',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
-        ),
+        AppText.caption('Nhóm', color: Colors.grey),
         const SizedBox(height: 12),
         DropdownButtonFormField<String?>(
-          value: _selectedCategoryId,
+          initialValue: _selectedCategoryId,
           decoration: InputDecoration(
             labelText: 'Chọn nhóm',
             border: const OutlineInputBorder(),
@@ -509,9 +465,9 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
                 : null,
           ),
           items: [
-            const DropdownMenuItem<String?>(
+            DropdownMenuItem<String?>(
               value: null,
-              child: Text('Tất cả'),
+              child: AppText.body('Tất cả'),
             ),
             ...widget.categories.map((cat) {
               return DropdownMenuItem<String?>(
@@ -520,7 +476,7 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
                   children: [
                     Icon(cat.icon, size: 20, color: cat.color),
                     const SizedBox(width: 8),
-                    Text(cat.name),
+                    AppText.body(cat.name),
                   ],
                 ),
               );
@@ -540,30 +496,23 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Loại giao dịch',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
-        ),
+        AppText.caption('Loại giao dịch', color: Colors.grey),
         const SizedBox(height: 12),
         SegmentedButton<TransactionType>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: TransactionType.all,
-              label: Text('Tất cả'),
+              label: AppText.body('Tất cả'),
               icon: Icon(Icons.list),
             ),
             ButtonSegment(
               value: TransactionType.income,
-              label: Text('Thu'),
+              label: AppText.body('Thu'),
               icon: Icon(Icons.arrow_downward, color: AppColors.green),
             ),
             ButtonSegment(
               value: TransactionType.expense,
-              label: Text('Chi'),
+              label: AppText.body('Chi'),
               icon: Icon(Icons.arrow_upward, color: AppColors.red),
             ),
           ],
@@ -595,16 +544,13 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
         children: [
           // Reset button
           Expanded(
-            child: OutlinedButton.icon(
+            child: AppButton.outline(
+              text: 'Đặt lại',
+              icon: Icons.refresh,
               onPressed: () {
                 context.read<StatisticsBloc>().add(const ResetFilter());
                 Navigator.pop(context);
               },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Đặt lại'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -612,13 +558,10 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
           // Apply button
           Expanded(
             flex: 2,
-            child: ElevatedButton.icon(
+            child: AppButton.primary(
+              text: 'Áp dụng',
+              icon: Icons.check,
               onPressed: _applyFilter,
-              icon: const Icon(Icons.check),
-              label: const Text('Áp dụng'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
             ),
           ),
         ],
@@ -661,12 +604,8 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
 
       case DateMode.range:
         if (_rangeStart == null || _rangeEnd == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Vui lòng chọn đủ ngày bắt đầu và kết thúc'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          AppSnackBar.showWarning(
+              context, 'Vui lòng chọn đủ ngày bắt đầu và kết thúc');
           return;
         }
         filter = FilterOptions(

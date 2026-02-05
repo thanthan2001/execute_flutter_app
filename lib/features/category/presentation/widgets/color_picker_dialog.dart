@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/configs/app_colors.dart';
+import '../../../../global/widgets/widgets.dart';
 
 /// Dialog để chọn màu sắc
 class ColorPickerDialog extends StatefulWidget {
@@ -80,13 +81,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               children: [
                 const Icon(Icons.palette, color: Colors.blue),
                 const SizedBox(width: 12),
-                const Text(
-                  'Chọn màu sắc',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                AppText.heading4('Chọn màu sắc'),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -112,13 +107,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 ],
               ),
               child: Center(
-                child: Text(
+                child: AppText.body(
                   'Màu đã chọn',
-                  style: TextStyle(
-                    color: _getContrastColor(_selectedColor!),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  color: _getContrastColor(_selectedColor!),
                 ),
               ),
             ),
@@ -182,14 +173,14 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
+                AppButton.text(
+                  text: 'Hủy',
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Hủy'),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(
+                AppButton.primary(
+                  text: 'Chọn',
                   onPressed: () => Navigator.of(context).pop(_selectedColor),
-                  child: const Text('Chọn'),
                 ),
               ],
             ),

@@ -29,7 +29,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return Right(remoteUser);
       } on ServerException {
         // 4. Nếu API báo lỗi, trả về ServerFailure
-        return Left(ServerFailure(message: 'Invalid credentials'));
+        return const Left(ServerFailure(message: 'Invalid credentials'));
       }
     } else {
       // 5. Nếu không có mạng, trả về NetworkFailure

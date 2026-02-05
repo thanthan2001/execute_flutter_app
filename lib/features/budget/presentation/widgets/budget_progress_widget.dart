@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../global/widgets/widgets.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../domain/entities/budget_status.dart';
 
@@ -48,20 +49,10 @@ class BudgetProgressWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    category.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
+                  AppText.body(category.name),
+                  AppText.caption(
                     status.alertLevel.message,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(status.alertLevel.colorValue),
-                      fontWeight: FontWeight.w500,
-                    ),
+                    color: Color(status.alertLevel.colorValue),
                   ),
                 ],
               ),
@@ -77,13 +68,9 @@ class BudgetProgressWidget extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: Text(
+              child: AppText.label(
                 '${status.percentage.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  color: Color(status.alertLevel.colorValue),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                color: Color(status.alertLevel.colorValue),
               ),
             ),
           ],
@@ -113,41 +100,17 @@ class BudgetProgressWidget extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Đã chi',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                AppText.caption('Đã chi', color: Colors.grey[600]),
                 const SizedBox(height: 2),
-                Text(
-                  currencyFormat.format(status.usedAmount),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                AppText.label(currencyFormat.format(status.usedAmount)),
               ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  'Ngân sách',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                AppText.caption('Ngân sách', color: Colors.grey[600]),
                 const SizedBox(height: 2),
-                Text(
-                  currencyFormat.format(status.budgetAmount),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                AppText.label(currencyFormat.format(status.budgetAmount)),
               ],
             ),
           ],
@@ -174,15 +137,11 @@ class BudgetProgressWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: AppText.bodySmall(
                   status.isOverBudget
                       ? 'Vượt: ${currencyFormat.format(status.remainingAmount.abs())}'
                       : 'Còn lại: ${currencyFormat.format(status.remainingAmount)}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: status.isOverBudget ? Colors.red[700] : Colors.green[700],
-                  ),
+                  color: status.isOverBudget ? Colors.red[700] : Colors.green[700],
                 ),
               ),
             ],
