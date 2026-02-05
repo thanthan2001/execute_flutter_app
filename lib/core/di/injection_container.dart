@@ -49,6 +49,15 @@ import 'package:my_clean_app/features/budget/domain/usecases/delete_budget_useca
 import 'package:my_clean_app/features/budget/domain/usecases/get_budgets_usecase.dart';
 import 'package:my_clean_app/features/budget/domain/usecases/set_budget_usecase.dart';
 import 'package:my_clean_app/features/budget/presentation/bloc/budget_bloc.dart';
+import 'package:my_clean_app/features/spending_limit/data/models/spending_limit_model.dart';
+import 'package:my_clean_app/features/spending_limit/data/repositories/spending_limit_repository_impl.dart';
+import 'package:my_clean_app/features/spending_limit/domain/repositories/spending_limit_repository.dart';
+import 'package:my_clean_app/features/spending_limit/domain/usecases/check_spending_limit_status_usecase.dart';
+import 'package:my_clean_app/features/spending_limit/domain/usecases/delete_spending_limit_usecase.dart';
+import 'package:my_clean_app/features/spending_limit/domain/usecases/get_all_spending_limits_usecase.dart';
+import 'package:my_clean_app/features/spending_limit/domain/usecases/get_spending_limit_usecase.dart';
+import 'package:my_clean_app/features/spending_limit/domain/usecases/set_spending_limit_usecase.dart';
+import 'package:my_clean_app/features/spending_limit/presentation/bloc/spending_limit_bloc.dart';
 import 'package:my_clean_app/features/recurring_transaction/data/models/recurring_transaction_model.dart';
 import 'package:my_clean_app/features/recurring_transaction/data/repositories/recurring_transaction_repository_impl.dart';
 import 'package:my_clean_app/features/recurring_transaction/data/services/recurring_transaction_service.dart';
@@ -95,6 +104,9 @@ Future<void> init() async {
   }
   if (!Hive.isAdapterRegistered(3)) {
     Hive.registerAdapter(RecurringTransactionModelAdapter());
+  }
+  if (!Hive.isAdapterRegistered(4)) {
+    Hive.registerAdapter(SpendingLimitModelAdapter());
   }
 
   // ## Data Sources - Initialize first
@@ -245,6 +257,30 @@ Future<void> init() async {
   // Repository - Tái sử dụng DashboardLocalDataSource
   sl.registerLazySingleton<BudgetRepository>(
     () => BudgetRepositoryImpl(
+      localDataSource: sl(),
+    ),
+  );
+
+  // ## Features - SpendingLimit
+  // Bloc
+  sl.registerFactory(() => SpendingLimitBloc(
+        getSpendingLimitUseCase: sl(),
+        getAllSpendingLimitsUseCase: sl(),
+        setSpendingLimitUseCase: sl(),
+        deleteSpendingLimitUseCase: sl(),
+        checkSpendingLimitStatusUseCase: sl(),
+      ));
+
+  // Use cases
+  sl.registerLazySingleton(() => GetSpendingLimitUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllSpendingLimitsUseCase(sl()));
+  sl.registerLazySingleton(() => SetSpendingLimitUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteSpendingLimitUseCase(sl()));
+  sl.registerLazySingleton(() => CheckSpendingLimitStatusUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<SpendingLimitRepository>(
+    () => SpendingLimitRepositoryImpl(
       localDataSource: sl(),
     ),
   );

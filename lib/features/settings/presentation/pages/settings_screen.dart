@@ -127,6 +127,15 @@ class SettingsScreen extends StatelessWidget {
           subtitle: 'Quản lý backup và restore dữ liệu',
           onTap: () => context.push('/backup'),
         ),
+        
+        // Spending Limit - Navigate to spending limit settings
+        AppListTile.navigation(
+          icon: Icons.payments_outlined,
+          iconColor: Colors.orange,
+          title: 'Giới hạn chi tiêu',
+          subtitle: 'Thiết lập và theo dõi giới hạn chi tiêu',
+          onTap: () => context.push('/spending-limit'),
+        ),
     
       
         // Nút xóa toàn bộ dữ liệu

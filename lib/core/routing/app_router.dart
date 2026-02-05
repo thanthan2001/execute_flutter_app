@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/home/presentation/pages/features_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/transaction/presentation/pages/transaction_list_page.dart';
 import '../../features/transaction/presentation/pages/add_edit_transaction_page.dart';
@@ -12,6 +13,7 @@ import '../../features/category/domain/entities/category_entity.dart';
 import '../../features/statistics/presentation/pages/statistics_screen.dart';
 import '../../features/settings/presentation/pages/settings_screen.dart';
 import '../../features/budget/presentation/pages/budget_management_page.dart';
+import '../../features/spending_limit/presentation/pages/spending_limit_settings_page.dart';
 import '../../features/recurring_transaction/presentation/pages/recurring_transaction_list_page.dart';
 import '../../features/backup/presentation/pages/backup_screen.dart';
 
@@ -30,6 +32,10 @@ class AppRouter {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: '/features',
+        builder: (context, state) => const FeaturesPage(),
       ),
       GoRoute(
         path: '/dashboard',
@@ -74,19 +80,15 @@ class AppRouter {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
-        path: '/budget',
-        builder: (context, state) => const BudgetManagementPage(),
-      ),
-      GoRoute(
         path: '/budgets',
         builder: (context, state) => const BudgetManagementPage(),
       ),
       GoRoute(
-        path: '/recurring-transactions',
-        builder: (context, state) => const RecurringTransactionListPage(),
+        path: '/spending-limit',
+        builder: (context, state) => const SpendingLimitSettingsPage(),
       ),
       GoRoute(
-        path: '/recurring',
+        path: '/recurring-transactions',
         builder: (context, state) => const RecurringTransactionListPage(),
       ),
       GoRoute(

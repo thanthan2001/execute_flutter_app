@@ -13,6 +13,7 @@ import '../widgets/summary_card.dart';
 import '../widgets/date_filter_chips.dart';
 import '../widgets/monthly_bar_chart.dart';
 import '../widgets/swipeable_chart_section.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
 
 /// Dashboard Page - Trang chính hiển thị tổng quan thu chi
 class DashboardPage extends StatefulWidget {
@@ -71,111 +72,6 @@ class _DashboardPageState extends State<DashboardPage> {
               }
             },
           ),
-          // Menu với các tùy chọn
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.menu),
-            tooltip: 'Menu',
-            onSelected: (value) async {
-              switch (value) {
-                case 'statistics':
-                  await context.push('/statistics');
-                  break;
-                case 'budget':
-                  await context.push('/budget');
-                  if (mounted) {
-                    context.read<DashboardBloc>().add(const RefreshDashboard());
-                  }
-                  break;
-                case 'recurring':
-                  await context.push('/recurring-transactions');
-                  if (mounted) {
-                    context.read<DashboardBloc>().add(const RefreshDashboard());
-                  }
-                  break;
-                case 'categories':
-                  await context.push('/categories');
-                  if (mounted) {
-                    context.read<DashboardBloc>().add(const RefreshDashboard());
-                  }
-                  break;
-                case 'transactions':
-                  await context.push('/transactions');
-                  if (mounted) {
-                    context.read<DashboardBloc>().add(const RefreshDashboard());
-                  }
-                  break;
-                case 'settings':
-                  await context.push('/settings');
-                  if (mounted) {
-                    context.read<DashboardBloc>().add(const RefreshDashboard());
-                  }
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'statistics',
-                child: Row(
-                  children: [
-                    Icon(Icons.bar_chart, size: 20),
-                    SizedBox(width: 12),
-                    AppText.body('Thống kê'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'budget',
-                child: Row(
-                  children: [
-                    Icon(Icons.account_balance_wallet_outlined, size: 20),
-                    SizedBox(width: 12),
-                    AppText.body('Quản lý ngân sách'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'recurring',
-                child: Row(
-                  children: [
-                    Icon(Icons.repeat, size: 20),
-                    SizedBox(width: 12),
-                    AppText.body('Giao dịch định kỳ'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'categories',
-                child: Row(
-                  children: [
-                    Icon(Icons.category_outlined, size: 20),
-                    SizedBox(width: 12),
-                    AppText.body('Quản lý nhóm'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'transactions',
-                child: Row(
-                  children: [
-                    Icon(Icons.list_alt, size: 20),
-                    SizedBox(width: 12),
-                    AppText.body('Danh sách giao dịch'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'settings',
-                child: Row(
-                  children: [
-                    Icon(Icons.settings_outlined, size: 20),
-                    SizedBox(width: 12),
-                    AppText.body('Cài đặt'),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ],
       ),
       body: BlocBuilder<DashboardBloc, DashboardState>(
@@ -228,6 +124,14 @@ class _DashboardPageState extends State<DashboardPage> {
           return  Center(
             child: AppText.body('Kéo xuống để tải dữ liệu'),
           );
+        },
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        onNavigate: (route) async {
+          await context.push(route);
+          if (mounted) {
+            context.read<DashboardBloc>().add(const RefreshDashboard());
+          }
         },
       ),
     );

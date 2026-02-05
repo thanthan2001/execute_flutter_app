@@ -8,7 +8,8 @@ class AppText extends StatelessWidget {
   final int? maxLines;
   final TextOverflow? overflow;
   final Color? color;
-
+  final double? fontSize;
+  final FontWeight? fontWeight;
   const AppText(
     this.text, {
     super.key,
@@ -17,6 +18,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.color,
+    this.fontWeight,
+    this.fontSize,
   });
 
   /// Heading 1 - Display text lớn
@@ -99,8 +102,8 @@ class AppText extends StatelessWidget {
     );
   }
 
-  /// Body 1 - Text thông thường
-  factory AppText.body(
+  /// Heading 5 - Subsection heading
+  factory AppText.heading5(
     String text, {
     Key? key,
     Color? color,
@@ -113,12 +116,37 @@ class AppText extends StatelessWidget {
       key: key,
       style: TextStyle(
         fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: color,
+      ),
+      textAlign: textAlign,
+      maxLines: maxLines,
+      overflow: overflow,
+    );
+  }
+
+  /// Body 1 - Text thông thường
+  factory AppText.body(
+    String text, {
+    Key? key,
+    Color? color,
+    TextAlign? textAlign,
+    int? maxLines,
+    TextOverflow? overflow,
+    FontWeight? fontWeight,
+  }) {
+    return AppText(
+      text,
+      key: key,
+      style: TextStyle(
+        fontSize: 16,
         fontWeight: FontWeight.normal,
         color: color,
       ),
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
+      fontWeight: fontWeight,
     );
   }
 
@@ -152,6 +180,8 @@ class AppText extends StatelessWidget {
     Color? color,
     TextAlign? textAlign,
     int? maxLines,
+    double? fontSize,
+    
     TextOverflow? overflow,
   }) {
     return AppText(
@@ -163,7 +193,9 @@ class AppText extends StatelessWidget {
         color: color ?? Colors.grey[600],
       ),
       textAlign: textAlign,
+      fontSize: fontSize,
       maxLines: maxLines,
+  
       overflow: overflow,
     );
   }
@@ -174,6 +206,9 @@ class AppText extends StatelessWidget {
     Key? key,
     Color? color,
     TextAlign? textAlign,
+    FontWeight? fontWeight,
+    int? maxLines,
+    TextOverflow? overflow,
   }) {
     return AppText(
       text,
@@ -185,6 +220,9 @@ class AppText extends StatelessWidget {
         color: color,
       ),
       textAlign: textAlign,
+      fontWeight: fontWeight,
+      maxLines: maxLines,
+      overflow: overflow,
     );
   }
 
