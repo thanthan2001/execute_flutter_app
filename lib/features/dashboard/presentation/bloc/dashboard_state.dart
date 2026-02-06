@@ -19,14 +19,16 @@ class DashboardLoading extends DashboardState {}
 class DashboardLoaded extends DashboardState {
   final DashboardSummary summary;
   final DateFilter currentFilter;
+  final bool isTotalBalanceActive;
 
   const DashboardLoaded({
     required this.summary,
     required this.currentFilter,
+    required this.isTotalBalanceActive,
   });
 
   @override
-  List<Object?> get props => [summary, currentFilter];
+  List<Object?> get props => [summary, currentFilter, isTotalBalanceActive];
 }
 
 /// State load thất bại

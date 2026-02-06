@@ -45,3 +45,13 @@ class ChangeDateFilter extends DashboardEvent {
   @override
   List<Object?> get props => [filter, customStartDate, customEndDate];
 }
+
+/// Event bật/tắt chế độ số dư tổng cộng
+class ToggleTotalBalance extends DashboardEvent {
+  final bool isActive;
+
+  const ToggleTotalBalance({required this.isActive});
+
+  @override
+  List<Object?> get props => [isActive];
+}

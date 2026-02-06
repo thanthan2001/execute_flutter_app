@@ -79,6 +79,19 @@ class DashboardRepositoryImpl implements DashboardRepository {
             }
           }
 
+          // Tính toán số dư từ TẤT CẢ giao dịch (cộng dồn)
+          double cumulativeIncome = 0;
+          double cumulativeExpense = 0;
+          for (var transaction in allTransactions) {
+            if (transaction.type == TransactionType.income) {
+              cumulativeIncome += transaction.amount;
+            } else {
+              cumulativeExpense += transaction.amount;
+            }
+          }
+          final cumulativeBalance = cumulativeIncome - cumulativeExpense;
+          final filteredBalance = totalIncome - totalExpense;
+
           final monthlyData = monthlyDataMap.values.toList()
             ..sort((a, b) {
               if (a.year != b.year) return a.year.compareTo(b.year);
@@ -88,7 +101,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
           final summary = DashboardSummary(
             totalIncome: totalIncome,
             totalExpense: totalExpense,
-            balance: totalIncome - totalExpense,
+            balance: filteredBalance,
+            cumulativeBalance: cumulativeBalance,
             expenseByCategory: expenseByCategory,
             incomeByCategory: incomeByCategory,
             monthlyData: monthlyData,

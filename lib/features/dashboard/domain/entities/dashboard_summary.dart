@@ -5,6 +5,7 @@ class DashboardSummary extends Equatable {
   final double totalIncome; // Tổng thu
   final double totalExpense; // Tổng chi
   final double balance; // Số dư (thu - chi)
+  final double cumulativeBalance; // Số dư cộng dồn (tất cả giao dịch)
   final Map<String, double> expenseByCategory; // Chi tiêu theo nhóm
   final Map<String, double> incomeByCategory; // Thu nhập theo nhóm
   final List<MonthlyData> monthlyData; // Dữ liệu theo tháng
@@ -13,6 +14,7 @@ class DashboardSummary extends Equatable {
     required this.totalIncome,
     required this.totalExpense,
     required this.balance,
+    required this.cumulativeBalance,
     required this.expenseByCategory,
     required this.incomeByCategory,
     required this.monthlyData,
@@ -23,6 +25,7 @@ class DashboardSummary extends Equatable {
         totalIncome,
         totalExpense,
         balance,
+        cumulativeBalance,
         expenseByCategory,
         incomeByCategory,
         monthlyData,

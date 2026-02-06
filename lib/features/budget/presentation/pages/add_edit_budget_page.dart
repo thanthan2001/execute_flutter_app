@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/currency_input_formatter.dart';
@@ -145,9 +146,14 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
   Widget build(BuildContext context) {
     final isEditMode = widget.budget != null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4(isEditMode ? 'Sửa Ngân Sách' : 'Thêm Ngân Sách'),
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppText.heading4(isEditMode ? 'Sửa Ngân Sách' : 'Thêm Ngân Sách'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -315,6 +321,6 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                 ),
               ),
             ),
-    );
+    ));
   }
 }

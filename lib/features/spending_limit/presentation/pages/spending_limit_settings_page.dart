@@ -63,7 +63,12 @@ class _SpendingLimitSettingsViewState
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.of(context).pop();
+        return false;
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: AppText.heading4('Giới Hạn Chi Tiêu'),
         actions: [
@@ -148,7 +153,7 @@ class _SpendingLimitSettingsViewState
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildLimitSection(

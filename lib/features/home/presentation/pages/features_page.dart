@@ -8,19 +8,24 @@ class FeaturesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: const Color(0xFFF5F7FA),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF5F7FA),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          title: AppText.heading4('Chức năng'),
         ),
-        title: AppText.heading4('Chức năng'),
-      ),
       body: _buildFeaturesGrid(context),
-    );
+    ));
   }
 
   Widget _buildFeaturesGrid(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../global/widgets/widgets.dart';
 import '../../../dashboard/data/datasources/dashboard_local_data_source.dart';
@@ -55,7 +56,12 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: AppText.heading4('Quản Lý Ngân Sách'),
         actions: [
@@ -215,6 +221,6 @@ class _BudgetManagementViewState extends State<_BudgetManagementView> {
         },
         child: const Icon(Icons.add),
       ),
-    );
+    ));
   }
 }

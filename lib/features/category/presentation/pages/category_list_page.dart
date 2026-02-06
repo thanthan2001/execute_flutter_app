@@ -25,9 +25,14 @@ class _CategoryListPageState extends State<CategoryListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4('Quản lý nhóm'),
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppText.heading4('Quản lý nhóm'),
         elevation: 0,
       ),
       body: BlocConsumer<CategoryBloc, CategoryState>(
@@ -82,7 +87,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
         icon: const Icon(Icons.add),
         label: AppText.label('Thêm nhóm'),
       ),
-    );
+    ));
   }
 
   Widget _buildCategoryGrid(
@@ -180,6 +185,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
         ),
       ),
     );
+
   }
 
   Future<void> _showDeleteDialog(

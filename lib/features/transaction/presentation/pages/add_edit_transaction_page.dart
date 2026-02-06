@@ -64,9 +64,14 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4(isEditing ? 'Sửa giao dịch' : 'Thêm giao dịch'),
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppText.heading4(isEditing ? 'Sửa giao dịch' : 'Thêm giao dịch'),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -154,6 +159,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             );
           }
 
+          // Biến loading state để xây dựng form
           final isLoading = state is TransactionActionInProgress;
 
           return SingleChildScrollView(
@@ -191,7 +197,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           );
         },
       ),
-    );
+    ));
   }
 
   /// Build type selector (Thu/Chi)

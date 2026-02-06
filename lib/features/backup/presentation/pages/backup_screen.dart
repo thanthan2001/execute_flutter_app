@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -39,17 +40,22 @@ class _BackupScreenState extends State<BackupScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sao lưu & Khôi phục'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.file_upload), text: 'Export'),
-            Tab(icon: Icon(Icons.file_download), text: 'Import'),
-          ],
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Sao lưu & Khôi phục'),
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.file_upload), text: 'Export'),
+              Tab(icon: Icon(Icons.file_download), text: 'Import'),
+            ],
+          ),
         ),
-      ),
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -57,7 +63,7 @@ class _BackupScreenState extends State<BackupScreen> with SingleTickerProviderSt
           _buildImportTab(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildExportTab() {

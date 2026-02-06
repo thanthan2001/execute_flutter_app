@@ -7,6 +7,7 @@ import 'dashboard_state.dart';
 /// Bloc quản lý state của Dashboard
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final GetDashboardSummaryUseCase getDashboardSummaryUseCase;
+  bool _isTotalBalanceActive = false;
 
   DashboardBloc({
     required this.getDashboardSummaryUseCase,
@@ -14,6 +15,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<LoadDashboard>(_onLoadDashboard);
     on<RefreshDashboard>(_onRefreshDashboard);
     on<ChangeDateFilter>(_onChangeDateFilter);
+    on<ToggleTotalBalance>(_onToggleTotalBalance);
   }
 
   /// Xử lý event LoadDashboard
@@ -48,6 +50,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       (summary) => emit(DashboardLoaded(
         summary: summary,
         currentFilter: event.filter,
+        isTotalBalanceActive: _isTotalBalanceActive,
       )),
     );
   }
@@ -78,6 +81,21 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       customStartDate: event.customStartDate,
       customEndDate: event.customEndDate,
     ));
+  }
+
+  void _onToggleTotalBalance(
+    ToggleTotalBalance event,
+    Emitter<DashboardState> emit,
+  ) {
+    _isTotalBalanceActive = event.isActive;
+    if (state is DashboardLoaded) {
+      final currentState = state as DashboardLoaded;
+      emit(DashboardLoaded(
+        summary: currentState.summary,
+        currentFilter: currentState.currentFilter,
+        isTotalBalanceActive: _isTotalBalanceActive,
+      ));
+    }
   }
 
   /// Helper: Tính toán khoảng thời gian dựa trên filter

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../global/widgets/widgets.dart';
@@ -67,7 +68,12 @@ class _RecurringTransactionListViewState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: AppText.heading4('Giao Dịch Định Kỳ'),
         actions: [
@@ -283,7 +289,7 @@ class _RecurringTransactionListViewState
         },
         child: const Icon(Icons.add),
       ),
-    );
+    ));
   }
 
   Widget _buildRecurringCard(

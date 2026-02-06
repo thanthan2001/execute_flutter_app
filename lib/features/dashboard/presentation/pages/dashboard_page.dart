@@ -56,24 +56,29 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4('MONI'),
-        elevation: 0,
-        actions: [
-          //Add transaction
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Thêm giao dịch',
-            onPressed: () async {
-              await context.push('/transactions/add');
-              if (mounted) {
-                context.read<DashboardBloc>().add(const RefreshDashboard());
-              }
-            },
-          ),
-        ],
-      ),
+    return WillPopScope(
+      onWillPop: () async {
+        // Ngăn chặn swipe back thoát app từ trang chính
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppText.heading4('MONI'),
+          elevation: 0,
+          actions: [
+            //Add transaction
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              tooltip: 'Thêm giao dịch',
+              onPressed: () async {
+                await context.push('/transactions/add');
+                if (mounted) {
+                  context.read<DashboardBloc>().add(const RefreshDashboard());
+                }
+              },
+            ),
+          ],
+        ),
       body: BlocBuilder<DashboardBloc, DashboardState>(
         builder: (context, state) {
           if (state is DashboardLoading) {
@@ -131,6 +136,7 @@ class _DashboardPageState extends State<DashboardPage> {
           context.go(route);
         },
       ),
+    ),
     );
   }
 
@@ -138,6 +144,9 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildDashboardContent(BuildContext context, DashboardLoaded state) {
     final summary = state.summary;
     final theme = Theme.of(context);
+    final isTotalBalanceActive = state.isTotalBalanceActive;
+    final balanceAmount =
+        isTotalBalanceActive ? summary.cumulativeBalance : summary.balance;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -175,12 +184,36 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         const SizedBox(height: 12),
 
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            FilterChip(
+              label: AppText.bodySmall('Tổng cộng'),
+              selected: isTotalBalanceActive,
+              onSelected: (selected) {
+                context
+                    .read<DashboardBloc>()
+                    .add(ToggleTotalBalance(isActive: selected));
+              },
+              selectedColor: theme.primaryColor,
+              backgroundColor: Colors.grey[200],
+              labelStyle: TextStyle(
+                color: isTotalBalanceActive ? Colors.white : Colors.black87,
+                fontWeight:
+                    isTotalBalanceActive ? FontWeight.bold : FontWeight.normal,
+              ),
+              checkmarkColor: Colors.white,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
         // Balance Card
         SummaryCard(
           title: 'Số dư',
-          amount: summary.balance,
+          amount: balanceAmount,
           icon: Icons.account_balance_wallet,
-          color: summary.balance >= 0 ? Colors.blue : Colors.orange,
+          color: balanceAmount >= 0 ? Colors.blue : Colors.orange,
         ),
         const SizedBox(height: 24),
 

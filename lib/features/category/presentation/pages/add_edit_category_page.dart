@@ -48,7 +48,12 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: AppText.heading4(isEditing ? 'Sửa nhóm' : 'Thêm nhóm'),
         elevation: 0,
@@ -114,7 +119,7 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildPreviewCard() {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/configs/app_colors.dart';
@@ -39,50 +40,60 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4('Thống kê'),
-        elevation: 0,
-        actions: [
-          // Filter button
-          IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
-            tooltip: 'Bộ lọc',
-            onPressed: _showFilterBottomSheet,
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppText.heading4('Thống kê'),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Tất cả', icon: Icon(Icons.dashboard)),
-            Tab(text: 'Tổng thu', icon: Icon(Icons.arrow_downward)),
-            Tab(text: 'Tổng chi', icon: Icon(Icons.arrow_upward)),
+          actions: [
+            // Filter button
+            IconButton(
+              icon: const Icon(Icons.filter_alt_outlined),
+              tooltip: 'Bộ lọc',
+              onPressed: _showFilterBottomSheet,
+            ),
           ],
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Tất cả', icon: Icon(Icons.dashboard)),
+              Tab(text: 'Tổng thu', icon: Icon(Icons.arrow_downward)),
+              Tab(text: 'Tổng chi', icon: Icon(Icons.arrow_upward)),
+            ],
+          ),
         ),
-      ),
-      body: BlocBuilder<StatisticsBloc, StatisticsState>(
-        builder: (context, state) {
-          if (state is StatisticsLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        body: BlocBuilder<StatisticsBloc, StatisticsState>(
+          builder: (context, state) {
+            if (state is StatisticsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (state is StatisticsError) {
-            return _buildError(state.message);
-          }
+            if (state is StatisticsError) {
+              return _buildError(state.message);
+            }
 
-          if (state is StatisticsLoaded) {
-            return TabBarView(
-              controller: _tabController,
-              children: [
-                _buildAllTab(state),
-                _buildIncomeTab(state),
-                _buildExpenseTab(state),
-              ],
-            );
-          }
+            if (state is StatisticsLoaded) {
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAllTab(state),
+                  _buildIncomeTab(state),
+                  _buildExpenseTab(state),
+                ],
+              );
+            }
 
-          return  Center(child: AppText.body('Kéo xuống để tải dữ liệu'));
-        },
+            return  Center(child: AppText.body('Kéo xuống để tải dữ liệu'));
+          },
+        ),
       ),
     );
   }

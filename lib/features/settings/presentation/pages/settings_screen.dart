@@ -6,6 +6,7 @@ import '../../../../global/widgets/widgets.dart';
 import '../bloc/settings_bloc.dart';
 import '../bloc/settings_event.dart';
 import '../bloc/settings_state.dart';
+import 'dart:async';
 
 /// Màn hình Cài đặt
 class SettingsScreen extends StatelessWidget {
@@ -15,14 +16,14 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        context.go('/dashboard');
+        context.pop();
         return false;
       },
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/dashboard'),
+            onPressed: () => context.pop(),
           ),
           title: AppText.heading4('Cài đặt'),
           centerTitle: true,
@@ -31,8 +32,12 @@ class SettingsScreen extends StatelessWidget {
           listener: (context, state) {
             if (state is TransactionsCleared) {
               AppSnackBar.showSuccess(context, 'Đã xóa toàn bộ giao dịch');
-              // Pop về màn hình trước và báo là cần refresh
-              Navigator.of(context).pop(true);
+              // Navigate back to previous screen
+              Future.microtask(() {
+                if (context.mounted) {
+                  context.pop();
+                }
+              });
             } else if (state is ClearTransactionsError) {
               AppSnackBar.showError(context, 'Lỗi: ${state.message}');
             }

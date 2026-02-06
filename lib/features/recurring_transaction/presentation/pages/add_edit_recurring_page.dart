@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/currency_input_formatter.dart';
@@ -114,7 +115,12 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        context.pop();
+        return false;
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: AppText.heading4(
             widget.recurring == null ? 'Thêm Định Kỳ' : 'Sửa Định Kỳ'),
@@ -243,6 +249,6 @@ class _AddEditRecurringPageState extends State<AddEditRecurringPage> {
                 ),
               ),
             ),
-    );
+    ));
   }
 }

@@ -41,7 +41,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        context.go('/dashboard');
+        context.pop();
         return false;
       },
       child: Scaffold(
@@ -51,7 +51,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              context.go('/dashboard');
+              context.pop();
             },
           ),
         ),
