@@ -39,8 +39,8 @@ class _SpendingLimitSettingsView extends StatefulWidget {
 class _SpendingLimitSettingsViewState
     extends State<_SpendingLimitSettingsView> {
   
-  Map<SpendingLimitPeriod, SpendingLimitEntity?> _limits = {};
-  Map<SpendingLimitPeriod, SpendingLimitStatus?> _statuses = {};
+  final Map<SpendingLimitPeriod, SpendingLimitEntity?> _limits = {};
+  final Map<SpendingLimitPeriod, SpendingLimitStatus?> _statuses = {};
   
   @override
   void initState() {
@@ -52,13 +52,13 @@ class _SpendingLimitSettingsViewState
     final bloc = context.read<SpendingLimitBloc>();
     
     // Load weekly limit
-    bloc.add(LoadSpendingLimit(period: SpendingLimitPeriod.weekly));
+    bloc.add(const LoadSpendingLimit(period: SpendingLimitPeriod.weekly));
     
     // Delay nhỏ để tránh race condition
     await Future.delayed(const Duration(milliseconds: 100));
     
     // Load monthly limit
-    bloc.add(LoadSpendingLimit(period: SpendingLimitPeriod.monthly));
+    bloc.add(const LoadSpendingLimit(period: SpendingLimitPeriod.monthly));
   }
   
   @override

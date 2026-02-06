@@ -503,17 +503,17 @@ class _AdvancedFilterBottomSheetState extends State<AdvancedFilterBottomSheet> {
             ButtonSegment(
               value: TransactionType.all,
               label: AppText.body('Tất cả'),
-              icon: Icon(Icons.list),
+              icon: const Icon(Icons.list),
             ),
             ButtonSegment(
               value: TransactionType.income,
               label: AppText.body('Thu'),
-              icon: Icon(Icons.arrow_downward, color: AppColors.green),
+              icon: const Icon(Icons.arrow_downward, color: AppColors.green),
             ),
             ButtonSegment(
               value: TransactionType.expense,
               label: AppText.body('Chi'),
-              icon: Icon(Icons.arrow_upward, color: AppColors.red),
+              icon: const Icon(Icons.arrow_upward, color: AppColors.red),
             ),
           ],
           selected: {_selectedType},

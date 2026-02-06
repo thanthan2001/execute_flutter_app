@@ -158,6 +158,7 @@ class AppText extends StatelessWidget {
     TextAlign? textAlign,
     int? maxLines,
     TextOverflow? overflow,
+    FontWeight? fontWeight,
   }) {
     return AppText(
       text,
@@ -170,6 +171,7 @@ class AppText extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
+      fontWeight: fontWeight,
     );
   }
 

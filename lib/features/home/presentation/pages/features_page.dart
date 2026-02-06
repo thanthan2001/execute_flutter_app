@@ -13,6 +13,10 @@ class FeaturesPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7FA),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+        ),
         title: AppText.heading4('Chức năng'),
       ),
       body: _buildFeaturesGrid(context),

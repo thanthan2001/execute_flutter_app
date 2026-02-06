@@ -227,17 +227,17 @@ class _AddEditBudgetPageState extends State<AddEditBudgetPage> {
                         ButtonSegment(
                           value: BudgetPeriod.monthly,
                           label: AppText.body('Tháng'),
-                          icon: Icon(Icons.calendar_month),
+                          icon: const Icon(Icons.calendar_month),
                         ),
                         ButtonSegment(
                           value: BudgetPeriod.quarterly,
                           label: AppText.body('Quý'),
-                          icon: Icon(Icons.calendar_view_month),
+                          icon: const Icon(Icons.calendar_view_month),
                         ),
                         ButtonSegment(
                           value: BudgetPeriod.yearly,
                           label: AppText.body('Năm'),
-                          icon: Icon(Icons.calendar_today),
+                          icon: const Icon(Icons.calendar_today),
                         ),
                       ],
                       selected: {_selectedPeriod},

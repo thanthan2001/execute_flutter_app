@@ -175,9 +175,9 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ).copyWith(
-          overlayColor: MaterialStateProperty.resolveWith<Color?>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return Colors.white.withOpacity(0.2);
               }
               return null;
@@ -195,9 +195,9 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ).copyWith(
-          overlayColor: MaterialStateProperty.resolveWith<Color?>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return Colors.grey.withOpacity(0.2);
               }
               return null;
@@ -214,9 +214,9 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ).copyWith(
-          overlayColor: MaterialStateProperty.resolveWith<Color?>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return primaryColor.withOpacity(0.1);
               }
               return null;
@@ -232,9 +232,9 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ).copyWith(
-          overlayColor: MaterialStateProperty.resolveWith<Color?>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return primaryColor.withOpacity(0.1);
               }
               return null;
@@ -253,9 +253,9 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ).copyWith(
-          overlayColor: MaterialStateProperty.resolveWith<Color?>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return Colors.white.withOpacity(0.2);
               }
               return null;

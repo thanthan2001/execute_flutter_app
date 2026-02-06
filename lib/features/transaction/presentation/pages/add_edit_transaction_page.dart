@@ -68,12 +68,27 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       appBar: AppBar(
         title: AppText.heading4(isEditing ? 'Sửa giao dịch' : 'Thêm giao dịch'),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/transactions');
+            }
+          },
+        ),
       ),
       body: BlocConsumer<TransactionBloc, TransactionState>(
         listener: (context, state) {
           if (state is TransactionActionSuccess) {
-            // Pop với result = true để báo đã thành công
-            context.pop(true);
+            if (isEditing) {
+              // Nếu đang edit, quay lại trang trước
+              context.pop(true);
+            } else {
+              // Nếu thêm mới, chuyển sang danh sách giao dịch (replace current route)
+              context.go('/transactions');
+            }
           } else if (state is TransactionError) {
             AppSnackBar.showError(context, state.message);
           }

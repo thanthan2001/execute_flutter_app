@@ -106,7 +106,7 @@ class BackupRepositoryImpl implements BackupRepository {
       final backup = BackupFileEntity.fromJson(jsonMap);
       return Right(backup);
     } catch (e) {
-      return Left(CacheFailure(message: 'invalid_format'));
+      return const Left(CacheFailure(message: 'invalid_format'));
     }
   }
 

@@ -128,10 +128,7 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       bottomNavigationBar: CustomBottomNavBar(
         onNavigate: (route) async {
-          await context.push(route);
-          if (mounted) {
-            context.read<DashboardBloc>().add(const RefreshDashboard());
-          }
+          context.go(route);
         },
       ),
     );

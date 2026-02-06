@@ -269,7 +269,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             color: Colors.blue.shade700,
           ),
           const Spacer(),
-          Icon(Icons.filter_alt, color: Colors.blue.shade700, size: 20),
+          Icon(Icons.star, color: Colors.blue.shade700, size: 20),
         ],
       ),
     );
@@ -367,15 +367,21 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   }
 
   Widget _buildCombinedChart(StatisticsSummary summary) {
+    final formatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+      decimalDigits: 0,
+    );
+
     return SizedBox(
-      height: 200,
+      height: 240,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.center,
           maxY: (summary.totalIncome > summary.totalExpense
                   ? summary.totalIncome
                   : summary.totalExpense) *
-              1.2,
+              1.3,
           barGroups: [
             BarChartGroupData(
               x: 0,
@@ -389,6 +395,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   ),
                 ),
               ],
+              showingTooltipIndicators: [0],
             ),
             BarChartGroupData(
               x: 1,
@@ -402,8 +409,27 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   ),
                 ),
               ],
+              showingTooltipIndicators: [0],
             ),
           ],
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (group) => Colors.transparent,
+              tooltipPadding: EdgeInsets.zero,
+              tooltipMargin: 0,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                return BarTooltipItem(
+                  _formatCompactCurrency(rod.toY),
+                  TextStyle(
+                    color: rod.color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                );
+              },
+            ),
+          ),
           titlesData: FlTitlesData(
             show: true,
             bottomTitles: AxisTitles(
@@ -412,11 +438,27 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 getTitlesWidget: (value, meta) {
                   switch (value.toInt()) {
                     case 0:
-                      return const Text('Thu',
-                          style: TextStyle(color: AppColors.green));
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Thu',
+                          style: TextStyle(
+                            color: AppColors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
                     case 1:
-                      return const Text('Chi',
-                          style: TextStyle(color: AppColors.red));
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Chi',
+                          style: TextStyle(
+                            color: AppColors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
                     default:
                       return const Text('');
                   }
@@ -575,5 +617,17 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       fontFamily: cat.categoryIconFontFamily,
       fontPackage: cat.categoryIconFontPackage,
     );
+  }
+
+  /// Format số tiền dạng compact cho hiển thị trên biểu đồ
+  String _formatCompactCurrency(double amount) {
+    if (amount >= 1000000000) {
+      return '${(amount / 1000000000).toStringAsFixed(1)}B';
+    } else if (amount >= 1000000) {
+      return '${(amount / 1000000).toStringAsFixed(1)}M';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(0)}K';
+    }
+    return amount.toStringAsFixed(0);
   }
 }

@@ -13,35 +13,45 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4('Cài đặt'),
-        centerTitle: true,
-      ),
-      body: BlocListener<SettingsBloc, SettingsState>(
-        listener: (context, state) {
-          if (state is TransactionsCleared) {
-            AppSnackBar.showSuccess(context, 'Đã xóa toàn bộ giao dịch');
-            // Pop về màn hình trước và báo là cần refresh
-            Navigator.of(context).pop(true);
-          } else if (state is ClearTransactionsError) {
-            AppSnackBar.showError(context, 'Lỗi: ${state.message}');
-          }
-        },
-        child: BlocBuilder<SettingsBloc, SettingsState>(
-          builder: (context, state) {
-            return ListView(
-              children: [
-                // Thông tin ứng dụng
-                _buildAppInfoSection(context),
-
-                const Divider(height: 1),
-
-                // Quản lý dữ liệu
-                _buildDataManagementSection(context, state),
-              ],
-            );
+    return WillPopScope(
+      onWillPop: () async {
+        context.go('/dashboard');
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/dashboard'),
+          ),
+          title: AppText.heading4('Cài đặt'),
+          centerTitle: true,
+        ),
+        body: BlocListener<SettingsBloc, SettingsState>(
+          listener: (context, state) {
+            if (state is TransactionsCleared) {
+              AppSnackBar.showSuccess(context, 'Đã xóa toàn bộ giao dịch');
+              // Pop về màn hình trước và báo là cần refresh
+              Navigator.of(context).pop(true);
+            } else if (state is ClearTransactionsError) {
+              AppSnackBar.showError(context, 'Lỗi: ${state.message}');
+            }
           },
+          child: BlocBuilder<SettingsBloc, SettingsState>(
+            builder: (context, state) {
+              return ListView(
+                children: [
+                  // Thông tin ứng dụng
+                  _buildAppInfoSection(context),
+
+                  const Divider(height: 1),
+
+                  // Quản lý dữ liệu
+                  _buildDataManagementSection(context, state),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

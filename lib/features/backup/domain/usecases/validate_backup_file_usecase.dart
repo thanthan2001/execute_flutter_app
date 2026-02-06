@@ -37,7 +37,7 @@ class ValidateBackupFileUseCase
         final data = backup.data;
 
         if (metadata.schemaVersion != schemaVersion) {
-          return Left(CacheFailure(message: 'incompatible_version'));
+          return const Left(CacheFailure(message: 'incompatible_version'));
         }
 
         const requiredKeys = [
@@ -49,7 +49,7 @@ class ValidateBackupFileUseCase
 
         for (final key in requiredKeys) {
           if (!data.containsKey(key)) {
-            return Left(CacheFailure(message: 'invalid_format'));
+            return const Left(CacheFailure(message: 'invalid_format'));
           }
         }
 

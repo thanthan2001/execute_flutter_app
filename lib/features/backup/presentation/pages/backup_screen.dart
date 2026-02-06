@@ -45,8 +45,8 @@ class _BackupScreenState extends State<BackupScreen> with SingleTickerProviderSt
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.file_download), text: 'Export'),
-            Tab(icon: Icon(Icons.file_upload), text: 'Import'),
+            Tab(icon: Icon(Icons.file_upload), text: 'Export'),
+            Tab(icon: Icon(Icons.file_download), text: 'Import'),
           ],
         ),
       ),
@@ -450,14 +450,14 @@ class _BackupScreenState extends State<BackupScreen> with SingleTickerProviderSt
       context: context,
       title: 'Chế độ Import',
       options: [
-        AppDialogOption(
+        const AppDialogOption(
           value: BackupImportMode.replaceAll,
           icon: Icons.refresh,
           iconColor: Colors.red,
           label: 'Thay thế tất cả',
           subtitle: 'Xóa dữ liệu hiện tại và thay thế',
         ),
-        AppDialogOption(
+        const AppDialogOption(
           value: BackupImportMode.merge,
           icon: Icons.merge_type,
           iconColor: Colors.blue,

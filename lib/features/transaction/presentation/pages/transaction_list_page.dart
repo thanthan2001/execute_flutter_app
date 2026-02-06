@@ -21,6 +21,8 @@ class TransactionListPage extends StatefulWidget {
 class _TransactionListPageState extends State<TransactionListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  DateTime? _selectedDate;
+  String? _typeFilter; // 'income', 'expense', null = all
 
   @override
   void initState() {
@@ -37,12 +39,23 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText.heading4('Giao dịch'),
-        elevation: 0,
-      ),
-      body: BlocConsumer<TransactionBloc, TransactionState>(
+    return WillPopScope(
+      onWillPop: () async {
+        context.go('/dashboard');
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppText.heading4('Giao dịch'),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              context.go('/dashboard');
+            },
+          ),
+        ),
+        body: BlocConsumer<TransactionBloc, TransactionState>(
         listener: (context, state) {
           // Hiển thị thông báo khi có action success/error
           if (state is TransactionActionSuccess) {
@@ -86,18 +99,19 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
           return  Center(child: AppText.body('Kéo xuống để tải dữ liệu'));
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          // Navigate to add transaction screen
-          final result = await context.push('/transactions/add');
-          // Nếu có kết quả (đã thêm thành công), reload
-          if (result == true && mounted) {
-            context.read<TransactionBloc>().add(const RefreshTransactions());
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: AppText.label('Thêm giao dịch'),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            // Navigate to add transaction screen
+            final result = await context.push('/transactions/add');
+            // Nếu có kết quả (đã thêm thành công), reload
+            if (result == true && mounted) {
+              context.read<TransactionBloc>().add(const RefreshTransactions());
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: AppText.label('Thêm giao dịch'),
+        ),
       ),
     );
   }
@@ -107,12 +121,28 @@ class _TransactionListPageState extends State<TransactionListPage> {
     final transactions = state.transactions;
     final categories = state.categories;
 
-    final filteredTransactions = _searchQuery.isEmpty
-        ? transactions
-        : transactions.where((transaction) {
-            final description = transaction.description.toLowerCase();
-            return description.contains(_searchQuery.toLowerCase());
-          }).toList();
+    // Filter theo ngày
+    var filteredTransactions = _filterByDate(transactions);
+    
+    // Filter theo loại (Thu/Chi)
+    if (_typeFilter != null) {
+      filteredTransactions = filteredTransactions.where((transaction) {
+        if (_typeFilter == 'income') {
+          return transaction.type == TransactionType.income;
+        } else if (_typeFilter == 'expense') {
+          return transaction.type == TransactionType.expense;
+        }
+        return true;
+      }).toList();
+    }
+    
+    // Filter theo search query
+    if (_searchQuery.isNotEmpty) {
+      filteredTransactions = filteredTransactions.where((transaction) {
+        final description = transaction.description.toLowerCase();
+        return description.contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
 
     // Tạo map để lookup category dễ hơn
     final categoryMap = {for (var cat in categories) cat.id: cat};
@@ -135,8 +165,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
           ),
         ),
         const SizedBox(height: 8),
-        // Filter chips
-        _buildFilterChips(context, state.currentFilter),
+        // Filter row: Thu - Chi - Lịch
+        _buildFilterRow(),
+        const SizedBox(height: 8),
+
         const Divider(height: 1),
 
         // List transactions
@@ -169,84 +201,222 @@ class _TransactionListPageState extends State<TransactionListPage> {
     );
   }
 
-  /// Build filter chips
-  Widget _buildFilterChips(
-      BuildContext context, TransactionFilter currentFilter) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  /// Build filter row với Thu, Chi, và Lịch
+  Widget _buildFilterRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          _buildFilterChip(
-            context,
-            'Tất cả',
-            TransactionFilter.all,
-            currentFilter,
-            Icons.list,
+          // Thu button
+          Expanded(
+            child: _buildTypeFilterButton(
+              label: 'Thu',
+              icon: Icons.arrow_downward,
+              color: AppColors.green,
+              type: 'income',
+            ),
           ),
           const SizedBox(width: 8),
-          _buildFilterChip(
-            context,
-            'Thu',
-            TransactionFilter.income,
-            currentFilter,
-            Icons.arrow_downward,
-            AppColors.green,
+          // Chi button
+          Expanded(
+            child: _buildTypeFilterButton(
+              label: 'Chi',
+              icon: Icons.arrow_upward,
+              color: AppColors.red,
+              type: 'expense',
+            ),
           ),
           const SizedBox(width: 8),
-          _buildFilterChip(
-            context,
-            'Chi',
-            TransactionFilter.expense,
-            currentFilter,
-            Icons.arrow_upward,
-            AppColors.red,
+          // Calendar button
+          Expanded(
+            flex: 2,
+            child: _buildCalendarButton(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(
-    BuildContext context,
-    String label,
-    TransactionFilter filter,
-    TransactionFilter currentFilter,
-    IconData icon, [
-    Color? color,
-  ]) {
-    final isSelected = currentFilter == filter;
-    final theme = Theme.of(context);
-    final chipColor = color ?? theme.primaryColor;
-
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: isSelected ? Colors.white : chipColor,
-          ),
-          const SizedBox(width: 4),
-          AppText.bodySmall(label),
-        ],
-      ),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          context.read<TransactionBloc>().add(
-                ChangeTransactionFilter(filter: filter),
-              );
-        }
+  Widget _buildTypeFilterButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required String type,
+  }) {
+    final isSelected = _typeFilter == type;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _typeFilter = isSelected ? null : type;
+        });
       },
-      selectedColor: chipColor,
-      backgroundColor: Colors.grey[200],
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.1) : null,
+          border: Border.all(
+            color: isSelected ? color : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color:  color,
+            ),
+            const SizedBox(width: 4),
+            AppText.bodySmall(
+              label,
+              color: color,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ],
+        ),
       ),
-      checkmarkColor: Colors.white,
     );
+  }
+
+  Widget _buildCalendarButton() {
+    return InkWell(
+      onTap: _showDatePicker,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: _selectedDate != null ? Theme.of(context).primaryColor : Colors.grey[600],
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: AppText.bodySmall(
+                _selectedDate != null 
+                  ? DateFormat('dd/MM/yy').format(_selectedDate!)
+                  : 'Lịch',
+                color: _selectedDate != null ? Theme.of(context).primaryColor : Colors.grey[600],
+                fontWeight: _selectedDate != null ? FontWeight.bold : FontWeight.normal,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (_selectedDate != null) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedDate = null;
+                  });
+                },
+                child: Icon(
+                  Icons.clear,
+                  size: 16,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build calendar filter
+  Widget _buildCalendarFilter() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: InkWell(
+        onTap: _showDatePicker,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_today, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppText.body(
+                  _selectedDate != null 
+                    ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
+                    : 'Xem tất cả giao dịch',
+                ),
+              ),
+              if (_selectedDate != null)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = null;
+                    });
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4.0),
+                    child: Icon(Icons.clear, size: 20),
+                  ),
+                )
+              else
+                const Icon(Icons.arrow_drop_down),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Show date picker
+  Future<void> _showDatePicker() async {
+    final picked = await showDatePicker(
+        context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Theme.of(context).primaryColor,
+                onPrimary: Colors.white,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  /// Filter transactions by selected date
+  List<TransactionEntity> _filterByDate(List<TransactionEntity> transactions) {
+    if (_selectedDate == null) {
+      return transactions;
+    }
+
+    final startDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
+    final endDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day, 23, 59, 59);
+
+    return transactions.where((transaction) {
+      return transaction.date.isAfter(startDate.subtract(const Duration(seconds: 1))) &&
+          transaction.date.isBefore(endDate.add(const Duration(seconds: 1)));
+    }).toList();
   }
 
   /// Build transaction item

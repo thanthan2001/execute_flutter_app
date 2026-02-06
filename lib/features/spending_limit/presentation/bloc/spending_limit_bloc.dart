@@ -191,7 +191,7 @@ class SpendingLimitBloc extends Bloc<SpendingLimitEvent, SpendingLimitState> {
 
     await limitResult.fold(
       (failure) async {
-        emit(SpendingLimitError(
+        emit(const SpendingLimitError(
           message: 'Không thể cập nhật trạng thái',
         ));
       },
